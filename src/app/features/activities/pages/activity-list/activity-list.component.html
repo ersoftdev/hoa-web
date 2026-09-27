@@ -1,0 +1,86 @@
+<app-page-header title="Activities" subtitle="Audit log of HOA activity — payments, approvals, publications, profile changes." />
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <app-search-bar placeholder="Search activity…" (search)="onSearch($event)" />
+      </div>
+      <div class="col-md-3">
+        <app-search-bar placeholder="Filter by user…" (search)="onActorFilter($event)" />
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" (change)="onCategoryChange($event)">
+          @for (option of categories; track option) {
+            <option [value]="option">{{ option === 'All' ? 'All types' : option }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-3">
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text">From</span>
+              <input type="date" class="form-control" (change)="onFromChange($event)" [attr.max]="to() || null" />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text">To</span>
+              <input type="date" class="form-control" (change)="onToChange($event)" [attr.min]="from() || null" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading activity…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load activity" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @let data = result()!;
+        @if (data.items.length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Activity</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of data.items; track entry.id) {
+                  <tr>
+                    <td class="table-cell-date">{{ entry.occurredAt | date: 'MM/dd/yyyy, h:mm a' }}</td>
+                    <td>{{ entry.actorName }}</td>
+                    <td>
+                      <i class="bi text-muted" [class]="'bi-' + iconFor(entry.category)"></i>
+                      {{ entry.description }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <small class="text-muted">{{ data.total }} activit{{ data.total === 1 ? 'y' : 'ies' }}</small>
+            <app-pagination [page]="page()" [pageSize]="pageSize" [total]="data.total" (pageChange)="onPageChange($event)" />
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state icon="clock-history" title="No activity found" description="Try adjusting your search or filters." />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

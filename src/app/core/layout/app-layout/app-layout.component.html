@@ -1,0 +1,21 @@
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="admin-app">
+  <div class="admin-wrapper" [class.sidebar-collapsed]="layout.sidebarCollapsed()">
+    <app-navbar />
+    <app-sidebar />
+
+    <div class="sidebar-backdrop" [class.show]="layout.mobileSidebarOpen()" (click)="layout.closeMobileSidebar()" aria-hidden="true"></div>
+
+    <main id="main-content" class="admin-main">
+      <div class="container-fluid p-4">
+        <app-breadcrumb />
+        <router-outlet />
+      </div>
+    </main>
+
+    <app-footer />
+  </div>
+</div>
+
+<app-confirmation-dialog />

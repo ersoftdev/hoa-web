@@ -1,0 +1,195 @@
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading service…" />
+  }
+  @case ('error') {
+    <app-error-state title="Unable to load service" [description]="errorMessage() ?? ''" (retry)="load()" />
+  }
+  @case ('success') {
+    @let data = service()!;
+
+    <app-page-header [title]="data.name">
+      @if (canManage) {
+        <a [routerLink]="['/app/services', data.id, 'edit']" class="btn btn-outline-secondary">
+          <i class="bi bi-pencil"></i>
+          Edit Service
+        </a>
+      }
+      @if (canRequest && data.status === 'Active') {
+        <a [routerLink]="['/app/services', data.id, 'request']" class="btn btn-primary">
+          <i class="bi bi-send"></i>
+          Request Service
+        </a>
+      }
+    </app-page-header>
+
+    @if (actionError()) {
+      <div class="alert alert-danger" role="alert">{{ actionError() }}</div>
+    }
+
+    <div class="row g-3 g-lg-4">
+      <div class="col-lg-8">
+        <div class="card mb-3 mb-lg-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h6 mb-0">Overview</h2>
+            <app-status-badge [status]="data.status" />
+          </div>
+          <div class="card-body">
+            <p class="mb-3">{{ data.description }}</p>
+            <dl class="row mb-0">
+              <dt class="col-sm-4 text-muted">Schedule</dt>
+              <dd class="col-sm-8">
+                @if (data.schedule.isRecurring) {
+                  Recurs {{ data.schedule.recurrenceFrequency | titlecase }}
+                  @if (data.schedule.autoNotifyHomeowners) {
+                    <span class="text-muted"> · homeowners notified automatically</span>
+                  }
+                } @else {
+                  {{ data.schedule.fromDate | date: 'MM/dd/yyyy' }} – {{ data.schedule.endDate | date: 'MM/dd/yyyy' }}
+                  @if (data.schedule.is24Hours) {
+                    <span class="text-muted"> · Available 24 hours</span>
+                  } @else {
+                    <span class="text-muted">
+                      · {{ '1970-01-01T' + data.schedule.startTime | date: 'shortTime' }} – {{ '1970-01-01T' + data.schedule.endTime | date: 'shortTime' }}
+                    </span>
+                  }
+                }
+              </dd>
+
+              <dt class="col-sm-4 text-muted mb-0">Capacity</dt>
+              <dd class="col-sm-8 mb-0">{{ data.capacity ?? 'Unlimited' }}</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="card mb-3 mb-lg-4">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Requirements</h2>
+          </div>
+          <div class="card-body">
+            @if (data.requirements.length) {
+              <ul class="mb-0 ps-3">
+                @for (requirement of data.requirements; track requirement) {
+                  <li>{{ requirement }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="text-muted mb-0">No specific requirements.</p>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Rates</h2>
+          </div>
+          <div class="card-body p-0">
+            @if (data.rates.length) {
+              <table class="table mb-0">
+                <tbody>
+                  @for (rate of data.rates; track rate.id) {
+                    <tr>
+                      <td>{{ rate.label }}</td>
+                      <td class="text-end">{{ rate.amount | hoaCurrency }}</td>
+                    </tr>
+                  }
+                  <tr>
+                    <td class="fw-medium">Total</td>
+                    <td class="text-end fw-medium">{{ totalRate() | hoaCurrency }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            } @else {
+              <p class="text-muted p-3 mb-0">No rates configured — this service is free.</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card mb-3 mb-lg-4">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Payment</h2>
+          </div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-6 text-muted">Payment required</dt>
+              <dd class="col-6 text-end">{{ data.payment.paymentRequired ? 'Yes' : 'No' }}</dd>
+
+              <dt class="col-6 text-muted" [class.mb-0]="!data.payment.downpaymentRequired">Downpayment required</dt>
+              <dd class="col-6 text-end" [class.mb-0]="!data.payment.downpaymentRequired">
+                {{ data.payment.downpaymentRequired ? 'Yes' : 'No' }}
+              </dd>
+
+              @if (data.payment.downpaymentRequired) {
+                <dt class="col-6 text-muted mb-0">Downpayment</dt>
+                <dd class="col-6 text-end mb-0">{{ data.payment.downPaymentPercent }}%</dd>
+              }
+            </dl>
+          </div>
+        </div>
+
+        @if (data.schedule.isRecurring && data.boardApproval.required) {
+          <div class="card mb-3 mb-lg-4">
+            <div class="card-header">
+              <h2 class="h6 mb-0">Board Approval</h2>
+            </div>
+            <div class="card-body">
+              <p class="mb-2 small">{{ data.boardApproval.approvedCount }} of {{ data.boardApproval.requiredCount }} approvals</p>
+              <div class="progress mb-3" style="height: 6px">
+                <div class="progress-bar" role="progressbar" [style.width.%]="boardApprovalProgress()"></div>
+              </div>
+              @if (data.boardApproval.approvedByMe) {
+                <p class="text-success small mb-0"><i class="bi bi-check-circle"></i> You've approved this.</p>
+              } @else if (canManage) {
+                <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="boardApprovePending()" (click)="onBoardApprove()">
+                  @if (boardApprovePending()) {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  }
+                  Approve
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (canManage) {
+          <div class="card">
+            <div class="card-header">
+              <h2 class="h6 mb-0">Manage</h2>
+            </div>
+            <div class="card-body d-grid gap-2">
+              @if (nextAction(); as next) {
+                <button
+                  type="button"
+                  class="btn"
+                  [class]="next.action === 'deactivate' ? 'btn-outline-danger' : 'btn-outline-primary'"
+                  [disabled]="actionPending()"
+                  (click)="onLifecycleAction(next.action, next.label)"
+                >
+                  @if (actionPending()) {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  }
+                  {{ next.label }}
+                </button>
+              }
+              @if (canArchive()) {
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  [disabled]="actionPending()"
+                  (click)="onLifecycleAction('archive', 'Archive')"
+                >
+                  Archive
+                </button>
+              }
+              @if (!nextAction() && !canArchive()) {
+                <p class="text-muted small mb-0">This service is archived — no further status changes.</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

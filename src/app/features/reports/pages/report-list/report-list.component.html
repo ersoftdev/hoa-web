@@ -1,0 +1,58 @@
+<app-page-header title="Reports" subtitle="Generate insights and export homeowners data." />
+
+<div class="card">
+  <div class="card-header bg-transparent">
+    <h2 class="h6 mb-0">Available Reports</h2>
+  </div>
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading reports…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load reports" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @if (reportTypes().length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Report Name</th>
+                  <th>Type</th>
+                  <th>Last Generated</th>
+                  <th class="table-cell-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (reportType of pagedReportTypes(); track reportType.id) {
+                  <tr>
+                    <td>
+                      {{ reportType.name }}
+                      <div class="text-muted small">{{ reportType.description }}</div>
+                    </td>
+                    <td>{{ reportType.category }}</td>
+                    <td>{{ reportType.lastGeneratedAt ? (reportType.lastGeneratedAt | date: 'MM/dd/yyyy') : '—' }}</td>
+                    <td class="table-cell-actions">
+                      <a [routerLink]="[routeFor(reportType)]" class="btn btn-sm btn-outline-secondary" aria-label="View">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <small class="text-muted">{{ reportTypes().length }} Available Report{{ reportTypes().length === 1 ? '' : 's' }}</small>
+            <app-pagination [page]="page()" [pageSize]="pageSize" [total]="reportTypes().length" (pageChange)="onPageChange($event)" />
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state icon="bar-chart" title="No reports available" description="No reports are available for your role yet." />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

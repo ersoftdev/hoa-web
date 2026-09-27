@@ -1,0 +1,58 @@
+<app-page-header title="Calendar" subtitle="Bookings across every community service. Click a date to see who's booked." />
+
+@if (loadError()) {
+  <div class="alert alert-danger py-2 small" role="alert">{{ loadError() }}</div>
+}
+
+<div class="row g-3 g-lg-4">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <app-hoa-calendar mode="view" [bookings]="bookings()" (monthChanged)="onMonthChanged($event)" (daySelected)="onDaySelected($event)" />
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="h6 mb-0">
+          @if (selectedDay(); as day) {
+            {{ day.date | date: 'MM/dd/yyyy' }}
+          } @else {
+            Select a day
+          }
+        </h2>
+      </div>
+      <div class="card-body">
+        @if (selectedDay(); as day) {
+          @if (day.bookings.length) {
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
+              @for (booking of day.bookings; track booking.id) {
+                <li>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi" [class]="'bi-' + (booking.serviceIcon ?? 'calendar-check')"></i>
+                    <strong>{{ booking.serviceName }}</strong>
+                  </div>
+                  <p class="mb-0 small text-muted">{{ booking.homeownerName }}</p>
+                  <p class="mb-0 small">
+                    @if (booking.bookingStartTime) {
+                      {{ '1970-01-01T' + booking.bookingStartTime | date: 'shortTime' }} –
+                      {{ '1970-01-01T' + booking.bookingEndTime | date: 'shortTime' }}
+                    } @else {
+                      All day
+                    }
+                  </p>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-muted small mb-0">No bookings this day.</p>
+          }
+        } @else {
+          <p class="text-muted small mb-0">Click a day on the calendar to see its bookings.</p>
+        }
+      </div>
+    </div>
+  </div>
+</div>

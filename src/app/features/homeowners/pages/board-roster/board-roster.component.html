@@ -1,0 +1,160 @@
+<app-page-header [title]="pageTitle">
+  <select class="form-select filter-select" [value]="selectedYear()" (change)="onYearChange($event)">
+    @for (year of yearOptions(); track year) {
+      <option [value]="year">{{ year }}</option>
+    }
+  </select>
+  @if (canManage && !addMode()) {
+    <button type="button" class="btn btn-primary" (click)="onStartAdd()">
+      <i class="bi bi-plus-lg"></i>
+      {{ mode === 'officers' ? 'Add Officer' : 'Add Board Member' }}
+    </button>
+  }
+</app-page-header>
+
+@if (actionError()) {
+  <div class="alert alert-danger" role="alert">{{ actionError() }}</div>
+}
+
+@if (addMode()) {
+  <div class="card mb-3 mb-lg-4">
+    <div class="card-header">
+      <h2 class="h6 mb-0">{{ mode === 'officers' ? 'Add Officer' : 'Add Board Member' }} — {{ selectedYear() }}</h2>
+    </div>
+    <div class="card-body">
+      @if (addError()) {
+        <div class="alert alert-danger py-2 small" role="alert">{{ addError() }}</div>
+      }
+
+      @if (loadingEligible()) {
+        <p class="text-muted small mb-0">Loading eligible homeowners…</p>
+      } @else if (eligibleError()) {
+        <p class="text-danger small mb-0">{{ eligibleError() }}</p>
+      } @else if (eligibleHomeowners().length) {
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="homeownerSelect">Homeowner</label>
+            <select id="homeownerSelect" class="form-select" (change)="onHomeownerSelect($event)">
+              <option value="">Select a homeowner…</option>
+              @for (homeowner of eligibleHomeowners(); track homeowner.id) {
+                <option [value]="homeowner.id">{{ homeowner.fullName }}</option>
+              }
+            </select>
+          </div>
+          @if (mode === 'officers') {
+            <div class="col-md-6">
+              <label class="form-label" for="positionSelect">Officer position</label>
+              @if (officerPositions().length) {
+                <select id="positionSelect" class="form-select" (change)="onOfficerPositionSelect($event)">
+                  <option value="">Select a position…</option>
+                  @for (position of officerPositions(); track position) {
+                    <option [value]="position">{{ position }}</option>
+                  }
+                </select>
+              } @else {
+                <p class="text-muted small mb-0">
+                  No officer positions yet —
+                  <a routerLink="/app/homeowners/officer-positions">add some on the Officer Positions page</a>
+                  first.
+                </p>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="addPending() || !selectedHomeownerId() || (mode === 'officers' && !selectedOfficerPosition())"
+            (click)="onConfirmAdd()"
+          >
+            @if (addPending()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            Add
+          </button>
+          <button type="button" class="btn btn-outline-secondary" [disabled]="addPending()" (click)="onCancelAdd()">Cancel</button>
+        </div>
+      } @else {
+        <app-empty-state
+          icon="person-check"
+          title="No eligible homeowners"
+          [description]="
+            mode === 'officers'
+              ? 'Officers must already be board members for ' + selectedYear() + '. Add one as a board member first, then come back here to promote them.'
+              : 'Candidates must be Active homeowners not already on the ' + selectedYear() + ' roster.'
+          "
+        />
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="onCancelAdd()">Close</button>
+      }
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading roster…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load roster" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @if (roster().length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Homeowner</th>
+                  <th>Role</th>
+                  @if (canManage) {
+                    <th class="table-cell-actions">Actions</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (membership of roster(); track membership.id) {
+                  <tr>
+                    <td>{{ membership.homeownerName }}</td>
+                    <td>
+                      @if (membership.officerPosition) {
+                        <span class="badge text-bg-primary">{{ membership.officerPosition }}</span>
+                      } @else {
+                        <span class="badge text-bg-secondary">Board Member</span>
+                      }
+                    </td>
+                    @if (canManage) {
+                      <td class="table-cell-actions">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          [disabled]="removePendingId() === membership.id"
+                          (click)="onRemove(membership)"
+                        >
+                          @if (removePendingId() === membership.id) {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          }
+                          Remove
+                        </button>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state
+              icon="people"
+              [title]="'No ' + (mode === 'officers' ? 'officers' : 'board members') + ' for ' + selectedYear()"
+              description="Use the button above to add one."
+            />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="hoa-calendar">
+  <div class="hoa-calendar-header d-flex align-items-center justify-content-between mb-2">
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="previousMonth()" aria-label="Previous month">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <span class="fw-semibold">{{ monthLabel() }}</span>
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="nextMonth()" aria-label="Next month">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="hoa-calendar-grid">
+    @for (label of weekdayLabels; track label) {
+      <div class="hoa-calendar-weekday">{{ label }}</div>
+    }
+
+    @for (week of weeks(); track $index) {
+      @for (day of week; track day.date) {
+        <button
+          type="button"
+          class="hoa-calendar-day"
+          [class.is-outside]="!day.inCurrentMonth"
+          [class.is-today]="day.isToday"
+          [class.is-busy]="day.isBusy"
+          [class.is-pending-start]="day.isPendingStart"
+          [class.is-in-range]="day.isInRange"
+          [class.is-range-start]="day.isRangeStart"
+          [class.is-range-end]="day.isRangeEnd"
+          [disabled]="mode() === 'picker' && !selectable()"
+          (click)="onDayClick(day)"
+        >
+          <span class="hoa-calendar-day-number">{{ day.dayOfMonth }}</span>
+
+          @if (day.entries.length) {
+            <span class="hoa-calendar-day-labels">
+              @for (entry of day.entries.slice(0, 2); track entry.id) {
+                @if (mode() === 'picker') {
+                  <span
+                    class="hoa-calendar-day-label hoa-calendar-day-label-row"
+                    [title]="entry.bookingStartTime ? (entry.bookingStartTime | hhmmTime) + ' - ' + (entry.bookingEndTime | hhmmTime) : 'All day'"
+                  >
+                    <i class="bi {{ iconClass(entry) }}" aria-hidden="true"></i>
+                    <span class="hoa-calendar-day-label-time">
+                      {{ entry.bookingStartTime && entry.bookingEndTime ? (entry.bookingStartTime | hhmmTime) + ' - ' + (entry.bookingEndTime | hhmmTime) : 'All day' }}
+                    </span>
+                  </span>
+                } @else {
+                  <span
+                    class="hoa-calendar-day-label"
+                    [title]="entry.serviceName + (entry.bookingStartTime ? ' (' + (entry.bookingStartTime | hhmmTime) + ' - ' + (entry.bookingEndTime | hhmmTime) + ')' : '')"
+                  >
+                    <span class="hoa-calendar-day-label-title">
+                      <i class="bi {{ iconClass(entry) }}" aria-hidden="true"></i>
+                      <span class="hoa-calendar-day-label-name">{{ entry.serviceName }}</span>
+                    </span>
+                    @if (entry.bookingStartTime && entry.bookingEndTime) {
+                      <span class="hoa-calendar-day-label-time">{{ entry.bookingStartTime | hhmmTime }} - {{ entry.bookingEndTime | hhmmTime }}</span>
+                    }
+                  </span>
+                }
+              }
+              @if (day.entries.length > 2) {
+                <span class="hoa-calendar-day-label-more">+{{ day.entries.length - 2 }} more</span>
+              }
+            </span>
+          }
+        </button>
+      }
+    }
+  </div>
+
+  @if (mode() === 'picker' && selectable()) {
+    <p class="text-muted small mt-2 mb-0">
+      Highlighted days already have a booking (shown with its time range). Click a start day, then an end day (or the same day twice for a one-day booking).
+    </p>
+  }
+</div>

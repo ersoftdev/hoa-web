@@ -1,0 +1,139 @@
+.hoa-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.hoa-calendar-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+  padding-block: 0.25rem;
+}
+
+.hoa-calendar-day {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 3.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: 0.25rem 0.125rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &.is-outside {
+    color: var(--bs-secondary-color);
+    opacity: 0.5;
+  }
+
+  &.is-today .hoa-calendar-day-number {
+    font-weight: 700;
+    color: var(--bs-primary);
+  }
+
+  &.is-pending-start {
+    border-color: var(--bs-primary);
+    box-shadow: inset 0 0 0 1px var(--bs-primary);
+  }
+
+  &.is-busy {
+    background: var(--bs-danger-bg-subtle);
+    border-color: var(--bs-danger-border-subtle);
+  }
+
+  &.is-in-range {
+    background: var(--bs-primary-bg-subtle, rgba(var(--bs-primary-rgb), 0.16));
+  }
+
+  &.is-range-start,
+  &.is-range-end {
+    border-color: var(--bs-primary);
+    box-shadow: inset 0 0 0 1px var(--bs-primary);
+  }
+}
+
+.hoa-calendar-day-number {
+  font-size: 0.8rem;
+}
+
+.hoa-calendar-day-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  width: 100%;
+  min-width: 0;
+}
+
+.hoa-calendar-day-label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  line-height: 1.1;
+  color: var(--bs-danger-text-emphasis);
+}
+
+.hoa-calendar-day-label-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.6rem;
+
+  .bi {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+  }
+}
+
+.hoa-calendar-day-label-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.hoa-calendar-day-label-time {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.55rem;
+  opacity: 0.85;
+}
+
+.hoa-calendar-day-label-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+
+  .bi {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+  }
+
+  .hoa-calendar-day-label-time {
+    font-size: 0.56rem;
+    min-width: 0;
+  }
+}
+
+.hoa-calendar-day-label-more {
+  font-size: 0.6rem;
+  color: var(--bs-danger-text-emphasis);
+  opacity: 0.75;
+}

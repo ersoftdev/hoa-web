@@ -1,0 +1,47 @@
+<aside class="admin-sidebar" id="admin-sidebar" [class.show]="layout.mobileSidebarOpen()">
+  <div class="sidebar-content">
+    <nav class="sidebar-nav" aria-label="Primary">
+      <ul class="nav flex-column">
+        @for (item of visibleItems(); track item.label) {
+          <li class="nav-item">
+            @if (visibleChildren(item).length) {
+              <a
+                class="nav-link has-children"
+                role="button"
+                tabindex="0"
+                [class.active]="hasActiveChild(item)"
+                [attr.aria-expanded]="isExpanded(item)"
+                (click)="toggleExpanded(item)"
+                (keydown.enter)="toggleExpanded(item)"
+              >
+                <i [class]="'bi bi-' + item.icon"></i>
+                <span>{{ item.label }}</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+              @if (isExpanded(item)) {
+                <ul class="nav nav-submenu">
+                  @for (child of visibleChildren(item); track child.label) {
+                    <li class="nav-item">
+                      <a class="nav-link" [routerLink]="route(child)" [class.active]="isChildActive(child)" (click)="onNavigate()">
+                        <i [class]="'bi bi-' + child.icon"></i>
+                        <span>{{ child.label }}</span>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            } @else {
+              <a class="nav-link" [routerLink]="route(item)" routerLinkActive="active" (click)="onNavigate()">
+                <i [class]="'bi bi-' + item.icon"></i>
+                <span>{{ item.label }}</span>
+                @if (item.badge) {
+                  <span class="badge bg-primary rounded-pill ms-auto">{{ item.badge }}</span>
+                }
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
+</aside>

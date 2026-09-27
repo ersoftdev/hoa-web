@@ -1,0 +1,36 @@
+.state-panel {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--bs-secondary-color);
+
+  .state-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+
+    @include media-breakpoint-up(lg) {
+      font-size: 3rem;
+    }
+  }
+
+  .state-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--bs-heading-color);
+  }
+
+  .state-description {
+    margin: 0 auto 1.5rem;
+    max-width: 32rem;
+  }
+
+  &.state-error .state-icon { color: var(--bs-danger); }
+
+  &.state-loading .spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--bs-primary);
+  }
+}

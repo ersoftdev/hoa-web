@@ -1,0 +1,79 @@
+<app-page-header title="Service Request Report" subtitle="All community service requests.">
+  <app-export-menu [pending]="exporting()" (formatSelected)="onExport($event)" />
+</app-page-header>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <app-search-bar placeholder="Filter by homeowner…" (search)="onSearch($event)" />
+      </div>
+      <div class="col-md-8">
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text">Requested from</span>
+              <input type="date" class="form-control" (change)="onFromChange($event)" [attr.max]="requestedTo() || null" />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text">To</span>
+              <input type="date" class="form-control" (change)="onToChange($event)" [attr.min]="requestedFrom() || null" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading service requests…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load report" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @let data = result()!;
+        @if (data.items.length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Homeowner</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                  <th>Requested</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of data.items; track row.id) {
+                  <tr>
+                    <td>{{ row.homeownerName }}</td>
+                    <td>{{ row.serviceName }}</td>
+                    <td><app-status-badge [status]="row.status" /></td>
+                    <td>{{ row.amount | hoaCurrency }}</td>
+                    <td>{{ row.requestedAt | date: 'MM/dd/yyyy' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <small class="text-muted">{{ data.total }} request{{ data.total === 1 ? '' : 's' }}</small>
+            <app-pagination [page]="page()" [pageSize]="pageSize" [total]="data.total" (pageChange)="onPageChange($event)" />
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state icon="inbox" title="No service requests found" description="Try adjusting your search or filters." />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

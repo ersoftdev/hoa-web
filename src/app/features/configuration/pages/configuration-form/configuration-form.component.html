@@ -1,0 +1,154 @@
+<app-page-header title="HOA Configuration" subtitle="HOA-wide settings — changes are audited." />
+
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading configuration…" />
+  }
+  @case ('error') {
+    <app-error-state title="Unable to load configuration" [description]="loadError() ?? ''" />
+  }
+  @case ('success') {
+    @if (saved()) {
+      <div class="alert alert-success d-flex align-items-start gap-2" role="status">
+        <i class="bi bi-check-circle flex-shrink-0 mt-1"></i>
+        <span>
+          Configuration saved.
+          @if (lastUpdated(); as info) {
+            Last updated {{ info.updatedAt | date: 'MM/dd/yyyy, h:mm a' }}@if (info.updatedBy) {
+              by {{ info.updatedBy }}
+            }.
+          }
+        </span>
+      </div>
+    }
+    @if (serverError()) {
+      <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="card mb-3 mb-lg-4">
+        <div class="card-header">
+          <h2 class="h6 mb-0">Operation Year</h2>
+        </div>
+        <div class="card-body">
+          <label class="form-label" for="operationYear">Current operation year</label>
+          <input
+            id="operationYear"
+            type="number"
+            class="form-control"
+            style="max-width: 12rem"
+            formControlName="operationYear"
+            [class.is-invalid]="form.controls.operationYear.invalid && form.controls.operationYear.touched"
+          />
+          @if (form.controls.operationYear.invalid && form.controls.operationYear.touched) {
+            <div class="invalid-feedback d-block">Enter a valid year.</div>
+          }
+        </div>
+      </div>
+
+      <div class="card mb-3 mb-lg-4">
+        <div class="card-header">
+          <h2 class="h6 mb-0">Board Configuration</h2>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label" for="maxBoardMembers">Maximum board members</label>
+              <input
+                id="maxBoardMembers"
+                type="number"
+                class="form-control"
+                formControlName="maxBoardMembers"
+                [class.is-invalid]="form.controls.maxBoardMembers.invalid && form.controls.maxBoardMembers.touched"
+              />
+              @if (form.controls.maxBoardMembers.invalid && form.controls.maxBoardMembers.touched) {
+                <div class="invalid-feedback">Must be at least 1.</div>
+              }
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="requiredOfficerCount">Required officer count</label>
+              <input
+                id="requiredOfficerCount"
+                type="number"
+                class="form-control"
+                formControlName="requiredOfficerCount"
+                [class.is-invalid]="
+                  (form.controls.requiredOfficerCount.invalid || form.hasError('officerCountExceedsMax')) &&
+                  form.controls.requiredOfficerCount.touched
+                "
+              />
+              @if (form.controls.requiredOfficerCount.hasError('required') && form.controls.requiredOfficerCount.touched) {
+                <div class="invalid-feedback d-block">Required officer count is required.</div>
+              } @else if (form.hasError('officerCountExceedsMax') && form.controls.requiredOfficerCount.touched) {
+                <div class="invalid-feedback d-block">Can't exceed the maximum board members.</div>
+              }
+            </div>
+          </div>
+
+          <p class="text-muted small mb-0">
+            Officer position titles are managed on their own page —
+            <a routerLink="/app/homeowners/officer-positions">Officer Positions</a>.
+          </p>
+        </div>
+      </div>
+
+      <div class="card mb-3 mb-lg-4">
+        <div class="card-header">
+          <h2 class="h6 mb-0">Registration</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="registrationOpen" formControlName="registrationOpen" />
+            <label class="form-check-label" for="registrationOpen">Allow new homeowners to self-register</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3 mb-lg-4">
+        <div class="card-header">
+          <h2 class="h6 mb-0">Payments</h2>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="paymentGracePeriodDays">Payment grace period (days)</label>
+              <input
+                id="paymentGracePeriodDays"
+                type="number"
+                class="form-control"
+                formControlName="paymentGracePeriodDays"
+                [class.is-invalid]="form.controls.paymentGracePeriodDays.invalid && form.controls.paymentGracePeriodDays.touched"
+              />
+              @if (form.controls.paymentGracePeriodDays.invalid && form.controls.paymentGracePeriodDays.touched) {
+                <div class="invalid-feedback">Must be 0 or more days.</div>
+              }
+              <div class="form-text">Days after a payment's due date before it's considered late.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="currencySymbol">Currency symbol</label>
+              <input
+                id="currencySymbol"
+                type="text"
+                class="form-control"
+                style="max-width: 8rem"
+                formControlName="currencySymbol"
+                [class.is-invalid]="form.controls.currencySymbol.invalid && form.controls.currencySymbol.touched"
+              />
+              @if (form.controls.currencySymbol.invalid && form.controls.currencySymbol.touched) {
+                <div class="invalid-feedback d-block">Enter a symbol, up to 3 characters (e.g. ₱, $, €).</div>
+              }
+              <div class="form-text">Shown in front of every money amount app-wide.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        }
+        Save Configuration
+      </button>
+    </form>
+  }
+}

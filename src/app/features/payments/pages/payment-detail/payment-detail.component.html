@@ -1,0 +1,79 @@
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading payment…" />
+  }
+  @case ('error') {
+    <app-error-state title="Unable to load payment" [description]="errorMessage() ?? ''" (retry)="load()" />
+  }
+  @case ('success') {
+    @let data = payment()!;
+
+    <app-page-header [title]="'Payment for ' + data.serviceName" />
+
+    <div
+      class="alert d-flex align-items-start gap-2"
+      [class.alert-warning]="data.status === 'Submitted' || data.status === 'Under Review'"
+      [class.alert-success]="data.status === 'Approved'"
+      [class.alert-danger]="data.status === 'Rejected'"
+      [class.alert-secondary]="data.status === 'Cancelled'"
+      role="status"
+    >
+      <i class="bi bi-info-circle flex-shrink-0 mt-1"></i>
+      <span>{{ statusMessage() }}</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0">Payment Details</h2>
+        <app-status-badge [status]="data.status" />
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">Service</dt>
+          <dd class="col-sm-8">{{ data.serviceName }}{{ data.isDownpayment ? ' (Downpayment)' : '' }}</dd>
+
+          <dt class="col-sm-4 text-muted">Amount</dt>
+          <dd class="col-sm-8 fw-medium">{{ data.amount | hoaCurrency }}</dd>
+
+          <dt class="col-sm-4 text-muted">Payment Type</dt>
+          <dd class="col-sm-8">{{ data.method }}{{ data.provider ? ' — ' + data.provider : '' }}</dd>
+
+          @if (data.reference) {
+            <dt class="col-sm-4 text-muted">Reference</dt>
+            <dd class="col-sm-8">{{ data.reference }}</dd>
+          }
+
+          @if (data.screenshotUrl) {
+            <dt class="col-sm-4 text-muted">Screenshot</dt>
+            <dd class="col-sm-8">
+              <a [href]="data.screenshotUrl" target="_blank" rel="noopener">View screenshot <i class="bi bi-box-arrow-up-right"></i></a>
+            </dd>
+          }
+
+          @if (data.notes) {
+            <dt class="col-sm-4 text-muted">Notes</dt>
+            <dd class="col-sm-8">{{ data.notes }}</dd>
+          }
+
+          <dt class="col-sm-4 text-muted">Submitted</dt>
+          <dd class="col-sm-8" [class.mb-0]="!data.reviewedAt && !data.adminNotes">{{ data.submittedAt | date: 'MM/dd/yyyy, h:mm a' }}</dd>
+
+          @if (data.reviewedAt) {
+            <dt class="col-sm-4 text-muted">Reviewed</dt>
+            <dd class="col-sm-8" [class.mb-0]="!data.adminNotes">
+              {{ data.reviewedAt | date: 'MM/dd/yyyy, h:mm a' }}
+              @if (data.reviewedBy) {
+                by {{ data.reviewedBy }}
+              }
+            </dd>
+          }
+
+          @if (data.adminNotes) {
+            <dt class="col-sm-4 text-muted mb-0">Admin Notes</dt>
+            <dd class="col-sm-8 mb-0">{{ data.adminNotes }}</dd>
+          }
+        </dl>
+      </div>
+    </div>
+  }
+}

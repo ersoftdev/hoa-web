@@ -1,0 +1,30 @@
+.admin-main {
+  margin-top: var(--header-height);
+  margin-left: var(--sidebar-width);
+  min-height: calc(100vh - var(--header-height));
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: clip;
+  min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .admin-main .page-header-row {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+
+    > .page-header-actions {
+      flex-wrap: wrap;
+    }
+  }
+}
+
+.page-header-actions .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

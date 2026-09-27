@@ -1,0 +1,9 @@
+<div class="state-panel state-error">
+  <i class="bi bi-exclamation-triangle state-icon"></i>
+  <p class="state-title">{{ title() }}</p>
+  <p class="state-description text-muted">{{ description() }}</p>
+  <button type="button" class="btn btn-outline-secondary" (click)="retry.emit()">
+    <i class="bi bi-arrow-clockwise"></i>
+    Try again
+  </button>
+</div>

@@ -1,0 +1,374 @@
+<app-page-header [title]="isEditMode ? 'Edit Service' : 'New Service'" />
+
+@if (loadingExisting()) {
+  <app-loading-state message="Loading service…" />
+} @else if (loadError()) {
+  <app-error-state title="Unable to load service" [description]="loadError() ?? ''" />
+} @else {
+  <div class="card">
+    <div class="card-body">
+      @if (serverError()) {
+        <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <h2 class="h6 mb-3">Overview</h2>
+        <div class="mb-3">
+          <label class="form-label" for="name">Service name</label>
+          <input
+            id="name"
+            type="text"
+            class="form-control"
+            formControlName="name"
+            placeholder="e.g. Parking, Association Due"
+            [class.is-invalid]="form.controls.name.invalid && form.controls.name.touched"
+          />
+          @if (form.controls.name.invalid && form.controls.name.touched) {
+            <div class="invalid-feedback">Service name is required.</div>
+          }
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="description">Description</label>
+          <textarea
+            id="description"
+            class="form-control"
+            rows="3"
+            formControlName="description"
+            [class.is-invalid]="form.controls.description.invalid && form.controls.description.touched"
+          ></textarea>
+          @if (form.controls.description.invalid && form.controls.description.touched) {
+            <div class="invalid-feedback">Description is required.</div>
+          }
+        </div>
+
+        <hr class="my-4" />
+        <h2 class="h6 mb-3">Schedule</h2>
+
+        <div class="form-check form-switch mb-3">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="isRecurring"
+            formControlName="isRecurring"
+            (change)="onRecurringToggle()"
+          />
+          <label class="form-check-label" for="isRecurring">Recurring service (no fixed schedule)</label>
+        </div>
+
+        @if (form.controls.isRecurring.value) {
+          <div class="row g-3 mb-2">
+            <div class="col-md-6">
+              <label class="form-label" for="recurrenceFrequency">Recurs</label>
+              <select
+                id="recurrenceFrequency"
+                class="form-select"
+                formControlName="recurrenceFrequency"
+                [class.is-invalid]="form.controls.recurrenceFrequency.invalid && form.controls.recurrenceFrequency.touched"
+              >
+                <option [ngValue]="null">Select frequency…</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Yearly">Yearly</option>
+              </select>
+              @if (form.controls.recurrenceFrequency.invalid && form.controls.recurrenceFrequency.touched) {
+                <div class="invalid-feedback">Choose how often this recurs.</div>
+              }
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="autoNotifyHomeowners" formControlName="autoNotifyHomeowners" />
+                <label class="form-check-label" for="autoNotifyHomeowners">Automatically notify all homeowners when due</label>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-info py-2 small mb-4" role="status">
+            <i class="bi bi-info-circle"></i>
+            Recurring services need approval from at least half the board before they take effect.
+          </div>
+        } @else {
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label" for="fromDate">From</label>
+              <input
+                id="fromDate"
+                type="date"
+                class="form-control"
+                formControlName="fromDate"
+                [class.is-invalid]="form.controls.fromDate.invalid && form.controls.fromDate.touched"
+              />
+              @if (form.controls.fromDate.invalid && form.controls.fromDate.touched) {
+                <div class="invalid-feedback">Start date is required.</div>
+              }
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="endDate">End</label>
+              <input
+                id="endDate"
+                type="date"
+                class="form-control"
+                formControlName="endDate"
+                [min]="form.controls.fromDate.value"
+                [class.is-invalid]="form.controls.endDate.invalid && form.controls.endDate.touched"
+              />
+              @if (form.controls.endDate.invalid && form.controls.endDate.touched) {
+                <div class="invalid-feedback">End date is required.</div>
+              }
+            </div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="is24Hours" formControlName="is24Hours" (change)="onIs24HoursToggle()" />
+            <label class="form-check-label" for="is24Hours">Available 24 hours</label>
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="isBookingService" formControlName="isBookingService" />
+            <label class="form-check-label" for="isBookingService">This is a Booking Service</label>
+            <div class="form-text">
+              Homeowners pick a date/time range within the window above; the fee is billed per day
+              (sum of rates × days booked).
+            </div>
+          </div>
+
+          @if (form.controls.isBookingService.value) {
+            <div class="mb-4">
+              <label class="form-label d-block">Calendar icon</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (icon of serviceIcons; track icon) {
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    [class.btn-primary]="form.controls.icon.value === icon"
+                    [class.btn-outline-secondary]="form.controls.icon.value !== icon"
+                    (click)="selectIcon(icon)"
+                    [attr.aria-pressed]="form.controls.icon.value === icon"
+                    [title]="icon"
+                  >
+                    <i class="bi" [class]="'bi-' + icon"></i>
+                  </button>
+                }
+              </div>
+              <div class="form-text">Shown on the org-wide Calendar and the homeowner's booking picker.</div>
+            </div>
+          }
+
+          @if (!form.controls.is24Hours.value) {
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label" for="startTime">Start time</label>
+                <input
+                  id="startTime"
+                  type="time"
+                  class="form-control"
+                  formControlName="startTime"
+                  [class.is-invalid]="form.controls.startTime.invalid && form.controls.startTime.touched"
+                />
+                @if (form.controls.startTime.invalid && form.controls.startTime.touched) {
+                  <div class="invalid-feedback">Start time is required.</div>
+                }
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="endTime">End time</label>
+                <input
+                  id="endTime"
+                  type="time"
+                  class="form-control"
+                  formControlName="endTime"
+                  [class.is-invalid]="form.controls.endTime.invalid && form.controls.endTime.touched"
+                />
+                @if (form.controls.endTime.invalid && form.controls.endTime.touched) {
+                  <div class="invalid-feedback">End time is required.</div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="mb-4"></div>
+          }
+        }
+
+        <div class="mb-4">
+          <label class="form-label" for="capacity">Capacity</label>
+          <input id="capacity" type="number" class="form-control" style="max-width: 12rem" formControlName="capacity" min="0" placeholder="Leave blank for unlimited" />
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <h2 class="h6 mb-0">Rates</h2>
+            <p class="text-muted small mb-0">A request's total fee is the sum of every rate below.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addRate()">
+            <i class="bi bi-plus-lg"></i>
+            Add Rate
+          </button>
+        </div>
+        <div formArrayName="rates" class="mb-4 mt-3">
+          @if (rates.length === 0) {
+            <p class="text-muted small">No rates added yet — add one, or leave empty for a free service.</p>
+          }
+          @for (rateGroup of rates.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="row g-2 align-items-start mb-2">
+              <div class="col-12 col-sm-7">
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="label"
+                  placeholder="e.g. Registration Fee"
+                  [class.is-invalid]="rateGroup.controls.label.invalid && rateGroup.controls.label.touched"
+                />
+              </div>
+              <div class="col-8 col-sm-3">
+                <div class="input-group">
+                  <span class="input-group-text">{{ currency.symbol() }}</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    formControlName="amount"
+                    min="0"
+                    step="0.01"
+                    [class.is-invalid]="rateGroup.controls.amount.invalid && rateGroup.controls.amount.touched"
+                  />
+                </div>
+              </div>
+              <div class="col-4 col-sm-2">
+                <button type="button" class="btn btn-outline-danger w-100" (click)="removeRate(i)" aria-label="Remove rate">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 mb-0">Requirements</h2>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addRequirement()">
+            <i class="bi bi-plus-lg"></i>
+            Add Requirement
+          </button>
+        </div>
+        <div formArrayName="requirements" class="mb-4">
+          @if (requirements.length === 0) {
+            <p class="text-muted small">No specific requirements.</p>
+          }
+          @for (requirement of requirements.controls; track $index; let i = $index) {
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" [formControlName]="i" placeholder="e.g. Valid vehicle registration" />
+              <button type="button" class="btn btn-outline-danger" (click)="removeRequirement(i)" aria-label="Remove requirement">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <hr class="my-4" />
+
+        <h2 class="h6 mb-3">Payment</h2>
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="downpaymentRequired"
+              formControlName="downpaymentRequired"
+              (change)="onDownpaymentToggle()"
+            />
+            <label class="form-check-label" for="downpaymentRequired">Downpayment required</label>
+          </div>
+        </div>
+
+        @if (form.controls.downpaymentRequired.value) {
+          <div class="mb-3" style="max-width: 16rem">
+            <label class="form-label" for="downPaymentPercent">Downpayment %</label>
+            <div class="input-group">
+              <input
+                id="downPaymentPercent"
+                type="number"
+                class="form-control"
+                formControlName="downPaymentPercent"
+                min="1"
+                max="100"
+                [class.is-invalid]="form.controls.downPaymentPercent.invalid && form.controls.downPaymentPercent.touched"
+              />
+              <span class="input-group-text">%</span>
+            </div>
+            @if (form.controls.downPaymentPercent.invalid && form.controls.downPaymentPercent.touched) {
+              <div class="invalid-feedback d-block">Enter a percentage between 1 and 100.</div>
+            }
+          </div>
+        }
+
+        <div class="mb-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="paymentRequired" formControlName="paymentRequired" />
+            <label class="form-check-label" for="paymentRequired">Payment required</label>
+          </div>
+          @if (form.controls.downpaymentRequired.value) {
+            <div class="form-text">Payment is required whenever a downpayment is required.</div>
+          }
+        </div>
+
+        <div class="mb-4">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="requireApprovalBeforePayment"
+              formControlName="requireApprovalBeforePayment"
+            />
+            <label class="form-check-label" for="requireApprovalBeforePayment">Require admin approval before payment can be made</label>
+          </div>
+          <div class="form-text">
+            @if (form.controls.requireApprovalBeforePayment.value) {
+              A new request starts as <strong>Pending</strong> — the homeowner can't pay until an admin approves the
+              request itself, at which point it opens up for payment as usual.
+            } @else {
+              A new request opens straight up for payment immediately (the default) — leave this off unless this
+              specific service needs the request vetted before anyone can pay toward it.
+            }
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <h2 class="h6 mb-3">Extra Charges</h2>
+        <div class="mb-4" style="max-width: 16rem">
+          <label class="form-label" for="serviceCharge">Service charge (optional)</label>
+          <div class="input-group">
+            <span class="input-group-text">{{ currency.symbol() }}</span>
+            <input
+              id="serviceCharge"
+              type="number"
+              class="form-control"
+              formControlName="serviceCharge"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              [class.is-invalid]="form.controls.serviceCharge.invalid && form.controls.serviceCharge.touched"
+            />
+          </div>
+          <div class="form-text">A flat surcharge added once to a request's total — never multiplied by booking days.</div>
+          @if (form.controls.serviceCharge.invalid && form.controls.serviceCharge.touched) {
+            <div class="invalid-feedback d-block">Must be 0 or more.</div>
+          }
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            {{ isEditMode ? 'Save Changes' : 'Create Service' }}
+          </button>
+          <a routerLink="/app/services" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+}

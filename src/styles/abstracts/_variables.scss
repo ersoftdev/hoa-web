@@ -1,0 +1,138 @@
+$primary: #6366f1;    
+$secondary: #64748b;  
+$success: #10b981;    
+$info: #06b6d4;       
+$warning: #f59e0b;    
+$danger: #ef4444;     
+$light: #f8fafc;      
+$dark: #1e293b;        
+
+$purple: #8b5cf6;
+$pink: #ec4899;
+$indigo: #6366f1;
+$teal: #14b8a6;
+$orange: #f97316;
+
+$gray-50: #f8fafc;
+$gray-100: #f1f5f9;
+$gray-200: #e2e8f0;
+$gray-300: #cbd5e1;
+$gray-400: #94a3b8;
+$gray-500: #64748b;
+$gray-600: #475569;
+$gray-700: #334155;
+$gray-800: #1e293b;
+$gray-900: #0f172a;
+
+$font-family-sans-serif: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-family-monospace: "Fira Code", "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+$font-size-base: 0.9rem;
+$line-height-base: 1.6;
+
+$h1-font-size: 2.25rem;  
+$h2-font-size: 1.875rem; 
+$h3-font-size: 1.5rem;   
+$h4-font-size: 1.25rem;  
+$h5-font-size: 1.125rem; 
+$h6-font-size: 1rem;     
+
+$spacer: 1rem;
+$spacers: (
+  0: 0,
+  1: $spacer * 0.25,
+  2: $spacer * 0.5,
+  3: $spacer * 0.75,
+  4: $spacer,
+  5: $spacer * 1.25,
+  6: $spacer * 1.5,
+  7: $spacer * 1.75,
+  8: $spacer * 2,
+  9: $spacer * 2.25,
+  10: $spacer * 2.5,
+  11: $spacer * 3,
+  12: $spacer * 3.5,
+);
+
+$border-radius: 0.75rem;
+$border-radius-sm: 0.5rem;
+$border-radius-lg: 1rem;
+$border-radius-xl: 1.25rem;
+$border-radius-2xl: 1.5rem;
+
+$box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+$box-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+$box-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+$sidebar-width: 240px;
+$sidebar-mini-width: 64px;
+$header-height: 64px;
+$footer-height: 56px;
+
+$transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+$zindex-dropdown: 1000;
+$zindex-sticky: 1020;
+$zindex-fixed: 1030;
+$zindex-modal-backdrop: 1040;
+$zindex-modal: 1050;
+$zindex-popover: 1060;
+$zindex-tooltip: 1070;
+$zindex-toast: 1080;
+
+$navbar-padding-y: 1rem;
+$navbar-brand-font-size: 1.5rem;
+
+$card-border-width: 0;
+$card-border-color: transparent;
+$card-box-shadow: $box-shadow;
+
+$btn-border-radius: $border-radius-sm;
+$btn-padding-y: 0.5rem;
+$btn-padding-x: 1rem;
+
+$input-border-radius: $border-radius-sm;
+$input-padding-y: 0.5rem;
+$input-padding-x: 0.875rem;
+
+$dark-bg: $gray-900;
+$dark-color: $gray-100;
+$dark-text-muted: $gray-400;
+$dark-border-color: $gray-700;
+$dark-primary: $primary;
+
+:root {
+  --sidebar-width: #{$sidebar-width};
+  --sidebar-mini-width: #{$sidebar-mini-width};
+  --header-height: #{$header-height};
+  --footer-height: #{$footer-height};
+
+  --transition-base: #{$transition-base};
+  --transition-fast: #{$transition-fast};
+  --transition-slow: #{$transition-slow};
+
+  --border-radius: #{$border-radius};
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-lg: #{$border-radius-lg};
+
+  --box-shadow: #{$box-shadow};
+  --box-shadow-sm: #{$box-shadow-sm};
+  --box-shadow-lg: #{$box-shadow-lg};
+
+  --bs-primary-text-emphasis: #4338ca;  
+  --bs-success-text-emphasis: #047857;  
+  --bs-danger-text-emphasis:  #b91c1c;  
+  --bs-warning-text-emphasis: #b45309;  
+  --bs-info-text-emphasis:    #0e7490;  
+}
+
+[data-bs-theme="dark"] {
+  --bs-primary-text-emphasis: #a5b4fc;  
+  --bs-success-text-emphasis: #6ee7b7;  
+  --bs-danger-text-emphasis:  #fca5a5;  
+  --bs-warning-text-emphasis: #fcd34d;  
+  --bs-info-text-emphasis:    #67e8f9;  
+}

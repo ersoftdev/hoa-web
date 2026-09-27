@@ -1,0 +1,70 @@
+@import "bootstrap/scss/functions";
+
+@import "styles/abstracts/variables";
+@import "styles/abstracts/mixins";
+
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/tables";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/dropdown";
+@import "bootstrap/scss/button-group";
+@import "bootstrap/scss/nav";
+@import "bootstrap/scss/navbar";
+@import "bootstrap/scss/card";
+@import "bootstrap/scss/breadcrumb";
+@import "bootstrap/scss/pagination";
+@import "bootstrap/scss/badge";
+@import "bootstrap/scss/alert";
+@import "bootstrap/scss/progress";
+@import "bootstrap/scss/list-group";
+@import "bootstrap/scss/close";
+@import "bootstrap/scss/toasts";
+@import "bootstrap/scss/modal";
+@import "bootstrap/scss/tooltip";
+@import "bootstrap/scss/spinners";
+
+@import "bootstrap/scss/helpers";
+@import "bootstrap/scss/utilities/api";
+
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "@fontsource-variable/inter";
+
+@import "styles/layout/header";
+@import "styles/layout/sidebar";
+@import "styles/layout/main";
+@import "styles/layout/footer";
+
+@import "styles/components/a11y";
+@import "styles/components/cards";
+@import "styles/components/buttons";
+@import "styles/components/forms";
+@import "styles/components/tables";
+@import "styles/components/navigation";
+@import "styles/components/icons";
+@import "styles/components/hamburger";
+@import "styles/components/header-buttons";
+@import "styles/components/toggle-switches";
+@import "styles/components/empty-state";
+@import "styles/components/notifications";
+
+@import "styles/pages/auth";
+
+@import "styles/themes/dark";
+@import "styles/themes/light";
+
+body {
+  min-height: 100vh;
+}

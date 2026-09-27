@@ -1,0 +1,172 @@
+<app-page-header [title]="'Welcome, ' + (currentUser()?.fullName ?? '')" subtitle="Here's what's happening with your HOA." />
+
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading your dashboard…" />
+  }
+  @case ('error') {
+    <app-error-state
+      title="Unable to load dashboard data"
+      [description]="errorMessage() ?? 'Something went wrong. Please try again.'"
+      (retry)="load()"
+    />
+  }
+  @case ('success') {
+    @let data = summary()!;
+    @let tiles = data.tiles;
+
+    <div
+      class="row row-cols-2 g-3 g-lg-4 mb-4"
+      [class.row-cols-xl-5]="isAdmin() || isBoardMember()"
+      [class.row-cols-xl-4]="!isAdmin() && !isBoardMember()"
+    >
+      @if (isAdmin()) {
+        <div class="col">
+          <app-stat-card label="Total Users" [value]="tiles.totalUsers ?? 0" icon="people" variant="primary" />
+        </div>
+      }
+      <div class="col">
+        <app-stat-card label="Finances" [value]="(tiles.finances | hoaCurrency) ?? '—'" icon="cash-stack" variant="success" />
+      </div>
+      @if (isAdmin() || isBoardMember()) {
+        <div class="col">
+          <app-stat-card
+            label="Fulfilled Service Requests"
+            [value]="tiles.completedOrFulfilledServiceRequests ?? 0"
+            icon="check2-circle"
+            variant="info"
+          />
+        </div>
+      }
+      @if (!isAdmin()) {
+        <div class="col">
+          <app-stat-card label="Total Service Requests" [value]="tiles.totalServiceRequests ?? 0" icon="tools" variant="primary" />
+        </div>
+      }
+      <div class="col">
+        <app-stat-card label="Completed Payment" [value]="tiles.completedPayments" icon="wallet2" variant="secondary" />
+      </div>
+      <div class="col">
+        <app-stat-card
+          label="Downpayment Verified, Payment Required"
+          [value]="tiles.downpaymentCompletionRequired"
+          icon="hourglass-split"
+          variant="warning"
+        />
+      </div>
+    </div>
+
+    <div class="row g-3 g-lg-4 mb-4">
+      <div class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="h6 mb-0">Financial Overview</h2>
+            <div class="btn-group btn-group-sm d-flex" role="group" aria-label="Date range">
+              @for (option of rangeOptions; track option.value) {
+                <button
+                  type="button"
+                  class="btn btn-outline-primary fw-medium"
+                  [class.btn-primary]="range() === option.value"
+                  [class.btn-outline-secondary]="range() !== option.value"
+                  [disabled]="chartLoading()"
+                  (click)="onRangeChange(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+          </div>
+          <div class="card-body">
+            @if (chartError()) {
+              <div class="alert alert-danger py-2 small mb-3" role="alert">{{ chartError() }}</div>
+            }
+            <app-line-chart [data]="financialOverview()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Recent Activity</h2>
+          </div>
+          <div class="card-body">
+            @if (data.recentActivity.length) {
+              <div class="activity-feed">
+                @for (activity of data.recentActivity; track activity.id) {
+                  <div class="activity-item">
+                    <div class="activity-icon bg-primary bg-opacity-10 text-primary">
+                      <i class="bi" [class]="'bi-' + categoryIcons[activity.category]"></i>
+                    </div>
+                    <div class="activity-content">
+                      <p class="mb-0"><span class="fw-medium">{{ activity.actorName }}</span> {{ activity.description }}</p>
+                      <small class="text-muted">{{ activity.occurredAt | timeAgo }}</small>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <app-empty-state icon="clock-history" title="No recent activity" />
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 g-lg-4 mb-4">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Payment by Type</h2>
+          </div>
+          <div class="card-body">
+            <app-donut-chart [data]="paymentTypeSlices()">
+              <app-empty-state emptyState icon="wallet2" title="No verified payments yet" />
+            </app-donut-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Service Requests</h2>
+          </div>
+          <div class="card-body">
+            <app-donut-chart [data]="serviceRequestSlices()">
+              <app-empty-state emptyState icon="tools" title="No service requests yet" />
+            </app-donut-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 g-lg-4">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Homeowners Recurring Services</h2>
+          </div>
+          <div class="card-body">
+            <app-donut-chart [data]="recurringServiceRequestSlices()">
+              <app-empty-state emptyState icon="arrow-repeat" title="No recurring service requests yet" />
+            </app-donut-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header">
+            <h2 class="h6 mb-0">Homeowners Recurring Service Payments</h2>
+          </div>
+          <div class="card-body">
+            <app-donut-chart [data]="recurringServicePaymentSlices()">
+              <app-empty-state emptyState icon="wallet2" title="No recurring service payments yet" />
+            </app-donut-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}

@@ -1,0 +1,118 @@
+<app-page-header title="Officer Positions" subtitle="The titles offered when adding an Officer.">
+  @if (!addMode()) {
+    <button type="button" class="btn btn-primary" (click)="onStartAdd()">
+      <i class="bi bi-plus-lg"></i>
+      Add Position
+    </button>
+  }
+</app-page-header>
+
+@if (actionError()) {
+  <div class="alert alert-danger" role="alert">{{ actionError() }}</div>
+}
+
+@if (addMode()) {
+  <div class="card mb-3 mb-lg-4">
+    <div class="card-header">
+      <h2 class="h6 mb-0">Add Officer Position</h2>
+    </div>
+    <div class="card-body">
+      @if (addError()) {
+        <div class="alert alert-danger py-2 small" role="alert">{{ addError() }}</div>
+      }
+      <label class="form-label" for="newPositionTitle">Title</label>
+      <div class="d-flex gap-2">
+        <input
+          id="newPositionTitle"
+          type="text"
+          class="form-control"
+          style="max-width: 20rem"
+          placeholder="e.g. President"
+          [value]="newTitle()"
+          (input)="onNewTitleInput($event)"
+          (keydown.enter)="onConfirmAdd()"
+        />
+        <button type="button" class="btn btn-primary" [disabled]="addPending() || !newTitle().trim()" (click)="onConfirmAdd()">
+          @if (addPending()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          }
+          Add
+        </button>
+        <button type="button" class="btn btn-outline-secondary" [disabled]="addPending()" (click)="onCancelAdd()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading officer positions…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load officer positions" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @if (positions().length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th class="table-cell-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (position of positions(); track position.id) {
+                  <tr>
+                    <td>
+                      @if (editingId() === position.id) {
+                        <div class="d-flex gap-2">
+                          <input
+                            type="text"
+                            class="form-control form-control-sm"
+                            style="max-width: 16rem"
+                            [value]="editTitle()"
+                            (input)="onEditTitleInput($event)"
+                            (keydown.enter)="onConfirmEdit(position)"
+                          />
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            [disabled]="editPending() || !editTitle().trim()"
+                            (click)="onConfirmEdit(position)"
+                          >
+                            @if (editPending()) {
+                              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            }
+                            Save
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="editPending()" (click)="onCancelEdit()">
+                            Cancel
+                          </button>
+                        </div>
+                        @if (editError()) {
+                          <div class="text-danger small mt-1">{{ editError() }}</div>
+                        }
+                      } @else {
+                        {{ position.title }}
+                      }
+                    </td>
+                    <td class="table-cell-actions">
+                      <app-row-actions [actions]="actionsFor(position)" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state icon="person-vcard" title="No officer positions yet" description="Add one above to get started." />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

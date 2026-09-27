@@ -1,0 +1,97 @@
+<app-page-header [title]="pageTitle">
+  @if (mode === 'my') {
+    <a routerLink="/app/payments/new" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i>
+      Create New Payment
+    </a>
+  }
+</app-page-header>
+
+<div class="d-flex flex-column flex-md-row gap-2 align-items-md-center mb-3">
+  <ul class="nav nav-pills flex-wrap gap-1">
+    @for (tab of statusTabs; track tab) {
+      <li class="nav-item">
+        <button type="button" class="nav-link" [class.active]="statusFilter() === tab" (click)="onStatusTabSelect(tab)">
+          {{ tab }}
+        </button>
+      </li>
+    }
+  </ul>
+  @if (mode === 'review') {
+    <select class="form-select filter-select w-100 ms-md-auto" (change)="onDownpaymentFilterChange($event)">
+      <option value="All">All payments</option>
+      <option value="Downpayment">Downpayments only</option>
+      <option value="Full">Full/remaining balance only</option>
+    </select>
+  }
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading payments…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load payments" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @let data = result()!;
+        @if (data.items.length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  @if (mode === 'review') {
+                    <th>Homeowner</th>
+                  }
+                  <th>Service</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th class="table-cell-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (payment of data.items; track payment.id) {
+                  <tr>
+                    @if (mode === 'review') {
+                      <td>{{ payment.homeownerName }}</td>
+                    }
+                    <td>{{ payment.serviceName }}{{ payment.isDownpayment ? ' (Downpayment)' : '' }}</td>
+                    <td>{{ payment.amount | hoaCurrency }}</td>
+                    <td><app-status-badge [status]="payment.status" /></td>
+                    <td>{{ payment.submittedAt | date: 'MM/dd/yyyy' }}</td>
+                    <td class="table-cell-actions">
+                      @if (mode === 'review') {
+                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="reviewModal.open(payment)">Review</button>
+                      } @else {
+                        <a [routerLink]="['/app/payments', payment.id]" class="btn btn-sm btn-outline-secondary" aria-label="View">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <small class="text-muted">{{ data.total }} payment{{ data.total === 1 ? '' : 's' }}</small>
+            <app-pagination [page]="page()" [pageSize]="pageSize" [total]="data.total" (pageChange)="onPageChange($event)" />
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state
+              icon="wallet2"
+              title="No payments found"
+              [description]="mode === 'my' ? 'Payments you submit will show up here.' : 'Try a different filter.'"
+            />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>
+
+<app-payment-review-modal #reviewModal (reviewed)="onReviewed()" />

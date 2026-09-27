@@ -1,0 +1,74 @@
+<div class="modal fade" tabindex="-1" aria-hidden="true" aria-labelledby="payment-review-title" #modalRef>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      @if (payment(); as data) {
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="payment-review-title">Payment Review</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          @if (actionError()) {
+            <div class="alert alert-danger py-2 small" role="alert">{{ actionError() }}</div>
+          }
+
+          <dl class="row mb-3">
+            <dt class="col-sm-4 text-muted">Homeowner</dt>
+            <dd class="col-sm-8">{{ data.homeownerName }}</dd>
+
+            <dt class="col-sm-4 text-muted">Service</dt>
+            <dd class="col-sm-8">{{ data.serviceName }}{{ data.isDownpayment ? ' (Downpayment)' : '' }}</dd>
+
+            <dt class="col-sm-4 text-muted">Amount</dt>
+            <dd class="col-sm-8 fw-medium">{{ data.amount | hoaCurrency }}</dd>
+
+            <dt class="col-sm-4 text-muted">Payment Type</dt>
+            <dd class="col-sm-8">{{ data.method }}{{ data.provider ? ' — ' + data.provider : '' }}</dd>
+
+            @if (data.reference) {
+              <dt class="col-sm-4 text-muted">Reference</dt>
+              <dd class="col-sm-8">{{ data.reference }}</dd>
+            }
+
+            @if (data.screenshotUrl) {
+              <dt class="col-sm-4 text-muted">Screenshot</dt>
+              <dd class="col-sm-8">
+                <a [href]="data.screenshotUrl" target="_blank" rel="noopener">View screenshot <i class="bi bi-box-arrow-up-right"></i></a>
+              </dd>
+            }
+
+            @if (data.accountReference) {
+              <dt class="col-sm-4 text-muted">Account Reference</dt>
+              <dd class="col-sm-8">{{ data.accountReference }}</dd>
+            }
+
+            @if (data.notes) {
+              <dt class="col-sm-4 text-muted mb-0">Notes</dt>
+              <dd class="col-sm-8 mb-0">{{ data.notes }}</dd>
+            }
+          </dl>
+
+          <div class="mb-2">
+            <label class="form-label" for="reviewAdminNotes">Admin Notes</label>
+            <textarea
+              id="reviewAdminNotes"
+              class="form-control"
+              rows="3"
+              [ngModel]="adminNotes()"
+              (ngModelChange)="adminNotes.set($event)"
+              placeholder="Required when rejecting; optional otherwise"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-danger" [disabled]="actionPending()" (click)="onReject()">Reject</button>
+          <button type="button" class="btn btn-primary" [disabled]="actionPending()" (click)="onApprove()">
+            @if (actionPending()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            Approve
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

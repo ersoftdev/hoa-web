@@ -1,0 +1,21 @@
+<div class="modal fade" tabindex="-1" aria-hidden="true" aria-labelledby="confirm-dialog-title" #modalRef>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      @if (options(); as opts) {
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="confirm-dialog-title">{{ opts.title }}</h2>
+          <button type="button" class="btn-close" (click)="cancel()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">{{ opts.message }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancel()">{{ opts.cancelLabel ?? 'Cancel' }}</button>
+          <button type="button" class="btn" [class]="'btn-' + (opts.variant ?? 'primary')" (click)="confirm()">
+            {{ opts.confirmLabel ?? 'Confirm' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

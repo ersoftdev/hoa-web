@@ -1,0 +1,64 @@
+<app-page-header [title]="isEditMode ? 'Edit Announcement' : 'New Announcement'" />
+
+@if (loadingExisting()) {
+  <app-loading-state message="Loading announcement…" />
+} @else if (loadError()) {
+  <app-error-state title="Unable to load announcement" [description]="loadError() ?? ''" />
+} @else {
+  <div class="card">
+    <div class="card-body">
+      @if (serverError()) {
+        <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="title">Title</label>
+          <input
+            id="title"
+            type="text"
+            class="form-control"
+            formControlName="title"
+            [class.is-invalid]="form.controls.title.invalid && form.controls.title.touched"
+          />
+          @if (form.controls.title.invalid && form.controls.title.touched) {
+            <div class="invalid-feedback">Title is required.</div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="content">Content</label>
+          <textarea
+            id="content"
+            class="form-control"
+            rows="6"
+            formControlName="content"
+            [class.is-invalid]="form.controls.content.invalid && form.controls.content.touched"
+          ></textarea>
+          @if (form.controls.content.invalid && form.controls.content.touched) {
+            <div class="invalid-feedback">Content is required.</div>
+          }
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="visibility">Visibility</label>
+          <select id="visibility" class="form-select" formControlName="visibility">
+            @for (option of visibilityOptions; track option[0]) {
+              <option [value]="option[0]">{{ option[1] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            {{ isEditMode ? 'Save Changes' : 'Create Announcement' }}
+          </button>
+          <a routerLink="/app/announcements" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,21 @@
+<div class="card stats-card h-100">
+  <div class="card-body">
+    <div class="d-flex align-items-center">
+      <div class="flex-shrink-0">
+        <div class="stats-icon" [class]="'bg-' + variant() + ' bg-opacity-10 text-' + variant()">
+          <i [class]="'bi bi-' + icon()"></i>
+        </div>
+      </div>
+      <div class="flex-grow-1 ms-3">
+        <p class="stat-card-label mb-0 text-muted">{{ label() }}</p>
+        <div class="h3 mb-0">{{ value() }}</div>
+        @if (trendLabel()) {
+          <small [class]="trendDirection() === 'down' ? 'text-danger-emphasis' : 'text-success-emphasis'">
+            <i class="bi" [class.bi-arrow-up]="trendDirection() === 'up'" [class.bi-arrow-down]="trendDirection() === 'down'"></i>
+            {{ trendLabel() }}
+          </small>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,177 @@
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading…" />
+  }
+  @case ('error') {
+    <app-error-state title="Unable to load" [description]="errorMessage() ?? ''" />
+  }
+  @case ('success') {
+    <app-page-header [title]="selectedItem() ? 'Pay for ' + selectedItem()!.serviceName : 'New Payment'" />
+
+    @if (isOpenPicker && payableItems().length === 0) {
+      <app-empty-state icon="check2-circle" title="Nothing to pay right now" description="You have no payments or downpayments currently due.">
+        <a routerLink="/app/services" class="btn btn-primary btn-sm">Browse Services</a>
+      </app-empty-state>
+    } @else {
+      <div class="row g-3 g-lg-4">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-body">
+              @if (serverError()) {
+                <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+              }
+
+              <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                @if (isOpenPicker) {
+                  <div class="mb-3">
+                    <label class="form-label" for="serviceRequestId">What are you paying for?</label>
+                    <select id="serviceRequestId" class="form-select" formControlName="serviceRequestId" (change)="onItemSelect($event)">
+                      <option value="">Select…</option>
+                      @for (item of payableItems(); track item.serviceRequestId) {
+                        <option [value]="item.serviceRequestId">
+                          {{ item.serviceName }}{{ item.isDownpayment ? ' (Downpayment)' : '' }}
+                        </option>
+                      }
+                    </select>
+                  </div>
+                }
+
+                @if (selectedItem()) {
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label" for="method">Payment Type</label>
+                    <select id="method" class="form-select" formControlName="method" (change)="onMethodChange()">
+                      <option value="Online">Online</option>
+                      <option value="Cash">Cash</option>
+                    </select>
+                  </div>
+                  @if (form.controls.method.value === 'Online') {
+                    <div class="col-md-6">
+                      <label class="form-label" for="provider">Provider</label>
+                      <select id="provider" class="form-select" formControlName="provider">
+                        <option value="GCash">GCash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                      </select>
+                    </div>
+                  }
+                </div>
+
+                @if (form.controls.method.value === 'Online') {
+                  <div class="alert alert-info small mb-3" role="status">
+                    @if (form.controls.provider.value === 'GCash') {
+                      Send payment via GCash to <strong>{{ gcashAccountNumber }}</strong
+                      >.
+                    } @else {
+                      Send payment via bank transfer — <strong>{{ bankTransferDetails }}</strong>
+                    }
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="reference">
+                      {{ form.controls.provider.value === 'GCash' ? 'Reference Number' : 'Confirmation No.' }}
+                    </label>
+                    <input
+                      id="reference"
+                      type="text"
+                      class="form-control"
+                      formControlName="reference"
+                      [class.is-invalid]="form.controls.reference.invalid && form.controls.reference.touched"
+                    />
+                    @if (form.controls.reference.invalid && form.controls.reference.touched) {
+                      <div class="invalid-feedback">This is required for an online payment.</div>
+                    }
+                  </div>
+                }
+
+                <div class="mb-3" style="max-width: 16rem">
+                  <label class="form-label" for="amount">Amount</label>
+                  <div class="input-group">
+                    <span class="input-group-text">{{ currency.symbol() }}</span>
+                    <input
+                      id="amount"
+                      type="number"
+                      class="form-control"
+                      formControlName="amount"
+                      min="0.01"
+                      step="0.01"
+                      [class.is-invalid]="form.controls.amount.invalid && form.controls.amount.touched"
+                    />
+                  </div>
+                  @if (form.controls.amount.invalid && form.controls.amount.touched) {
+                    <div class="invalid-feedback d-block">Enter an amount greater than 0.</div>
+                  }
+                </div>
+
+                @if (form.controls.method.value === 'Online') {
+                  <div class="mb-3">
+                    <label class="form-label" for="screenshotUrl">
+                      Screenshot URL
+                      <button
+                        type="button"
+                        class="btn btn-link btn-sm p-0 ms-1 align-baseline"
+                        (click)="showScreenshotHelp.set(!showScreenshotHelp())"
+                        aria-label="How do I get a screenshot URL?"
+                      >
+                        <i class="bi bi-question-circle"></i>
+                      </button>
+                    </label>
+                    @if (showScreenshotHelp()) {
+                      <div class="alert alert-secondary small py-2 mb-2" role="note">
+                        Upload a screenshot of your payment confirmation to a free image host — e.g.
+                        <a href="https://imgur.com/upload" target="_blank" rel="noopener">imgur.com</a>
+                        or a shared Google Drive/Photos link — then paste the resulting link here.
+                      </div>
+                    }
+                    <input
+                      id="screenshotUrl"
+                      type="url"
+                      class="form-control"
+                      formControlName="screenshotUrl"
+                      placeholder="https://…"
+                      [class.is-invalid]="form.controls.screenshotUrl.invalid && form.controls.screenshotUrl.touched"
+                    />
+                    @if (form.controls.screenshotUrl.invalid && form.controls.screenshotUrl.touched) {
+                      <div class="invalid-feedback">This is required for an online payment.</div>
+                    }
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="accountReference">
+                      {{ form.controls.provider.value === 'GCash' ? 'Your GCash Number' : 'Last 4 Digits of Bank Account' }}
+                    </label>
+                    <input
+                      id="accountReference"
+                      type="text"
+                      class="form-control"
+                      formControlName="accountReference"
+                      [class.is-invalid]="form.controls.accountReference.invalid && form.controls.accountReference.touched"
+                    />
+                    @if (form.controls.accountReference.invalid && form.controls.accountReference.touched) {
+                      <div class="invalid-feedback">This is required for an online payment.</div>
+                    }
+                  </div>
+                }
+
+                <div class="mb-4">
+                  <label class="form-label" for="notes">Notes (optional)</label>
+                  <textarea id="notes" class="form-control" rows="2" formControlName="notes"></textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+                    @if (submitting()) {
+                      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    Submit Payment
+                  </button>
+                  <a routerLink="/app/payments/my" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+              }
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+}

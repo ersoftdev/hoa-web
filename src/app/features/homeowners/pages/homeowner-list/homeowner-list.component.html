@@ -1,0 +1,93 @@
+<app-page-header [title]="'Homeowners'">
+  @if (canManage) {
+    <a routerLink="new" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i>
+      New Homeowner
+    </a>
+  }
+</app-page-header>
+
+<div class="card">
+  <div class="card-header table-controls">
+    <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center">
+      <div class="flex-grow-1">
+        <app-search-bar placeholder="Search by name, address, or email…" (search)="onSearch($event)" />
+      </div>
+      <select class="form-select filter-select w-100" (change)="onBoardRoleFilterChange($event)">
+        <option value="All">All homeowners</option>
+        <option value="board-member">Board members</option>
+        <option value="officer">Officers</option>
+      </select>
+      <select class="form-select filter-select w-100" (change)="onStatusFilterChange($event)">
+        <option value="All">All statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading homeowners…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load homeowners" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @let data = result()!;
+        @if (data.items.length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Board</th>
+                  <th class="table-cell-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (homeowner of data.items; track homeowner.id) {
+                  <tr>
+                    <td>
+                      <a [routerLink]="[homeowner.id]" class="fw-medium text-decoration-none">{{ homeowner.fullName }}</a>
+                      <div class="text-muted small">{{ homeowner.email }}</div>
+                    </td>
+                    <td>{{ homeowner.city }}, {{ homeowner.state }}</td>
+                    <td><app-status-badge [status]="homeowner.status" /></td>
+                    <td>
+                      @if (homeowner.officerPosition) {
+                        <span class="badge text-bg-primary">{{ homeowner.officerPosition }}</span>
+                      } @else if (homeowner.isBoardMember) {
+                        <span class="badge text-bg-secondary">Board Member</span>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td class="table-cell-actions">
+                      <app-row-actions [actions]="actionsFor(homeowner)" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <small class="text-muted">{{ data.total }} homeowner{{ data.total === 1 ? '' : 's' }}</small>
+            <app-pagination [page]="page()" [pageSize]="pageSize" [total]="data.total" (pageChange)="onPageChange($event)" />
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state icon="people" title="No homeowners found" description="Try adjusting your search or filters.">
+              @if (canManage) {
+                <a routerLink="new" class="btn btn-primary btn-sm">Add Homeowner</a>
+              }
+            </app-empty-state>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

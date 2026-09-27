@@ -1,0 +1,157 @@
+<app-page-header [title]="isEditMode ? 'Edit Homeowner' : 'New Homeowner'" />
+
+@if (loadingExisting()) {
+  <app-loading-state message="Loading homeowner…" />
+} @else if (loadError()) {
+  <app-error-state title="Unable to load homeowner" [description]="loadError() ?? ''" />
+} @else {
+  <div class="card">
+    <div class="card-body">
+      @if (serverError()) {
+        <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <h2 class="h6 mb-3">Profile</h2>
+        <div class="mb-3">
+          <label class="form-label" for="fullName">Full name</label>
+          <input
+            id="fullName"
+            type="text"
+            class="form-control"
+            formControlName="fullName"
+            [class.is-invalid]="form.controls.fullName.invalid && form.controls.fullName.touched"
+          />
+          @if (form.controls.fullName.invalid && form.controls.fullName.touched) {
+            <div class="invalid-feedback">Full name is required.</div>
+          }
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="address1">Address line 1</label>
+            <input
+              id="address1"
+              type="text"
+              class="form-control"
+              formControlName="address1"
+              [class.is-invalid]="form.controls.address1.invalid && form.controls.address1.touched"
+            />
+            @if (form.controls.address1.invalid && form.controls.address1.touched) {
+              <div class="invalid-feedback">Address is required.</div>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="address2">Address line 2</label>
+            <input id="address2" type="text" class="form-control" formControlName="address2" placeholder="Optional" />
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label" for="city">City</label>
+            <input
+              id="city"
+              type="text"
+              class="form-control"
+              formControlName="city"
+              [class.is-invalid]="form.controls.city.invalid && form.controls.city.touched"
+            />
+            @if (form.controls.city.invalid && form.controls.city.touched) {
+              <div class="invalid-feedback">City is required.</div>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="state">State</label>
+            <input
+              id="state"
+              type="text"
+              class="form-control"
+              formControlName="state"
+              [class.is-invalid]="form.controls.state.invalid && form.controls.state.touched"
+            />
+            @if (form.controls.state.invalid && form.controls.state.touched) {
+              <div class="invalid-feedback">State is required.</div>
+            }
+          </div>
+        </div>
+
+        <hr class="my-4" />
+        <h2 class="h6 mb-3">Login Credentials</h2>
+
+        <div class="mb-3">
+          <label class="form-label" for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            class="form-control"
+            formControlName="email"
+            [class.is-invalid]="form.controls.email.invalid && form.controls.email.touched"
+          />
+          @if (isEditMode) {
+            <div class="form-text">Email is tied to the homeowner's account and can't be changed here.</div>
+          } @else if (form.controls.email.invalid && form.controls.email.touched) {
+            <div class="invalid-feedback d-block">Enter a valid email address.</div>
+          }
+        </div>
+
+        @if (!isEditMode) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label" for="password">Password</label>
+              <div class="input-group">
+                <input
+                  id="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  class="form-control"
+                  formControlName="password"
+                  autocomplete="new-password"
+                  [class.is-invalid]="form.controls.password.invalid && form.controls.password.touched"
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  (click)="showPassword.set(!showPassword())"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                >
+                  <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+                </button>
+                @if (form.controls.password.invalid && form.controls.password.touched) {
+                  <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                }
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="confirmPassword">Confirm password</label>
+              <input
+                id="confirmPassword"
+                [type]="showPassword() ? 'text' : 'password'"
+                class="form-control"
+                formControlName="confirmPassword"
+                autocomplete="new-password"
+                [class.is-invalid]="
+                  (form.controls.confirmPassword.invalid || form.hasError('passwordMismatch')) && form.controls.confirmPassword.touched
+                "
+              />
+              @if (form.controls.confirmPassword.hasError('required') && form.controls.confirmPassword.touched) {
+                <div class="invalid-feedback d-block">Confirm the password.</div>
+              } @else if (form.hasError('passwordMismatch') && form.controls.confirmPassword.touched) {
+                <div class="invalid-feedback d-block">Passwords don't match.</div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            {{ isEditMode ? 'Save Changes' : 'Create Homeowner' }}
+          </button>
+          <a routerLink="/app/homeowners" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+}

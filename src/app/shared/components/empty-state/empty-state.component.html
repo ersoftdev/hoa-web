@@ -1,0 +1,8 @@
+<div class="state-panel">
+  <i class="bi state-icon" [class]="'bi-' + icon()"></i>
+  <p class="state-title">{{ title() }}</p>
+  @if (description()) {
+    <p class="state-description text-muted">{{ description() }}</p>
+  }
+  <ng-content />
+</div>

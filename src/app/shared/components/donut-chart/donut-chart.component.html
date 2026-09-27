@@ -1,0 +1,25 @@
+@if (total() > 0) {
+  <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-4 h-100">
+    <div class="donut-chart-wrap flex-shrink-0">
+      <canvas #canvas></canvas>
+    </div>
+    <ul class="donut-legend list-unstyled mb-0" style="max-width: 220px">
+      @for (slice of slices(); track slice.label; let i = $index) {
+        <li class="d-flex align-items-start gap-2 py-1">
+          <span class="donut-legend-dot flex-shrink-0" [style.background-color]="colorFor(i)"></span>
+          <span class="flex-grow-1">
+            <span class="d-flex justify-content-between gap-2">
+              <span class="text-body">{{ slice.label }}</span>
+              <span class="fw-medium">{{ slice.value | number }}</span>
+            </span>
+            @if (slice.meta) {
+              <small class="text-muted d-block">{{ slice.meta }}</small>
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  </div>
+} @else {
+  <ng-content select="[emptyState]" />
+}

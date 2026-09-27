@@ -1,0 +1,24 @@
+.notification-dropdown {
+  width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-bottom: 0;
+}
+
+.notification-item {
+  white-space: normal;
+  padding-block: 0.5rem;
+
+  &.is-unread {
+    background-color: rgba(var(--bs-primary-rgb), 0.06);
+  }
+}
+
+.unread-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 0.3rem;
+  border-radius: 50%;
+  background: var(--bs-primary);
+}

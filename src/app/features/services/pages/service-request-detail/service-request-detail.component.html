@@ -1,0 +1,146 @@
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading request…" />
+  }
+  @case ('error') {
+    <app-error-state title="Unable to load request" [description]="errorMessage() ?? ''" (retry)="load()" />
+  }
+  @case ('success') {
+    @let data = request()!;
+
+    <app-page-header [title]="data.serviceName" [subtitle]="isOwnRequest() ? undefined : 'Requested by ' + data.homeownerName">
+      <a routerLink="/app/services" class="btn btn-outline-secondary">Back to Services</a>
+      @if (data.status === 'Payment Required' || data.status === 'Downpayment Required') {
+        <a [routerLink]="['/app/payments/submit', data.id]" class="btn btn-primary">
+          <i class="bi bi-credit-card"></i>
+          {{ data.status === 'Downpayment Required' ? 'Pay Downpayment' : 'Pay Now' }}
+        </a>
+      }
+      @if (canReviewPayments && data.pendingPaymentId) {
+        <a [routerLink]="['/app/payments']" [queryParams]="{ reviewPaymentId: data.pendingPaymentId }" class="btn btn-primary">
+          <i class="bi bi-credit-card-2-front"></i>
+          Review Payment
+        </a>
+      }
+    </app-page-header>
+
+    <div
+      class="alert d-flex align-items-start gap-2"
+      [class.alert-warning]="
+        data.pendingPaymentId ||
+        data.status === 'Pending' ||
+        data.status === 'Payment Required' ||
+        data.status === 'Downpayment Required'
+      "
+      [class.alert-info]="!data.pendingPaymentId && (data.status === 'Payment Verified' || data.status === 'Downpayment Verified, Payment Completion Required')"
+      [class.alert-success]="!data.pendingPaymentId && (data.status === 'Approved' || data.status === 'Completed')"
+      [class.alert-danger]="!data.pendingPaymentId && data.status === 'Rejected'"
+      [class.alert-secondary]="!data.pendingPaymentId && data.status === 'Cancelled'"
+      role="status"
+    >
+      <i class="bi bi-info-circle flex-shrink-0 mt-1"></i>
+      <span>{{ statusMessage() }}</span>
+    </div>
+
+    @if (actionError()) {
+      <div class="alert alert-danger" role="alert">{{ actionError() }}</div>
+    }
+
+    <div class="row g-3 g-lg-4">
+      <div class="col-lg-8">
+        <div class="card mb-3 mb-lg-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h6 mb-0">Request Details</h2>
+            <app-status-badge [status]="displayStatus()" />
+          </div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-4 text-muted">Service</dt>
+              <dd class="col-sm-8">{{ data.serviceName }}</dd>
+
+              @if (data.bookingDays !== null) {
+                <dt class="col-sm-4 text-muted">Booking</dt>
+                <dd class="col-sm-8">
+                  {{ data.bookingStartDate | date: 'MM/dd/yyyy' }} – {{ data.bookingEndDate | date: 'MM/dd/yyyy' }}
+                  ({{ data.bookingDays }} day{{ data.bookingDays === 1 ? '' : 's' }})
+                  @if (data.bookingStartTime && data.bookingEndTime) {
+                    <br />
+                    {{ '1970-01-01T' + data.bookingStartTime | date: 'shortTime' }} –
+                    {{ '1970-01-01T' + data.bookingEndTime | date: 'shortTime' }}
+                  }
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Rate</dt>
+                <dd class="col-sm-8">
+                  {{ data.ratesSubtotal | hoaCurrency }}/day × {{ data.bookingDays }}
+                  @if (data.serviceChargeAmount) {
+                    + {{ data.serviceChargeAmount | hoaCurrency }} service charge
+                  }
+                </dd>
+              } @else if (data.serviceChargeAmount) {
+                <dt class="col-sm-4 text-muted">Includes</dt>
+                <dd class="col-sm-8">{{ data.serviceChargeAmount | hoaCurrency }} service charge</dd>
+              }
+
+              <dt class="col-sm-4 text-muted">Amount</dt>
+              <dd class="col-sm-8">{{ data.amount | hoaCurrency }}</dd>
+
+              @if (data.downPaymentAmount !== null) {
+                <dt class="col-sm-4 text-muted">Downpayment</dt>
+                <dd class="col-sm-8">{{ data.downPaymentAmount | hoaCurrency }}</dd>
+              }
+
+              <dt class="col-sm-4 text-muted">Requested</dt>
+              <dd class="col-sm-8">{{ data.requestedAt | date: 'MM/dd/yyyy, h:mm a' }}</dd>
+
+              <dt class="col-sm-4 text-muted">Last updated</dt>
+              <dd class="col-sm-8" [class.mb-0]="!data.notes && !data.remarks">{{ data.updatedAt | date: 'MM/dd/yyyy, h:mm a' }}</dd>
+
+              @if (data.notes) {
+                <dt class="col-sm-4 text-muted">Notes</dt>
+                <dd class="col-sm-8" [class.mb-0]="!data.remarks">{{ data.notes }}</dd>
+              }
+
+              @if (data.remarks) {
+                <dt class="col-sm-4 text-muted mb-0">Remarks</dt>
+                <dd class="col-sm-8 mb-0">{{ data.remarks }}</dd>
+              }
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        @if (canReview && (canApprove() || canReject())) {
+          <div class="card">
+            <div class="card-header">
+              <h2 class="h6 mb-0">Review</h2>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label" for="remarks">Remarks</label>
+                <textarea
+                  id="remarks"
+                  class="form-control"
+                  rows="3"
+                  [ngModel]="remarks()"
+                  (ngModelChange)="remarks.set($event)"
+                  placeholder="Required when rejecting; optional otherwise"
+                ></textarea>
+              </div>
+
+              <div class="d-grid gap-2">
+                @if (canApprove()) {
+                  <button type="button" class="btn btn-primary" [disabled]="actionPending()" (click)="onApprove()">Approve</button>
+                }
+                @if (canReject()) {
+                  <button type="button" class="btn btn-outline-danger" [disabled]="actionPending()" (click)="onReject()">Reject</button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

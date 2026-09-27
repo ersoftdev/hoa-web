@@ -1,0 +1,105 @@
+<header class="admin-header">
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" routerLink="/app/dashboard">
+        <svg class="brand-mark" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="var(--bs-primary)" />
+          <path d="M16 7l9 7.2V25h-5.5v-6.5h-7V25H7v-10.8L16 7z" fill="white" />
+        </svg>
+        <span class="brand-name">HO Portal</span>
+      </a>
+
+      <button
+        class="hamburger-menu"
+        type="button"
+        [class.is-active]="layout.sidebarCollapsed()"
+        (click)="layout.toggleSidebar()"
+        aria-controls="admin-sidebar"
+        [attr.aria-expanded]="!layout.sidebarCollapsed()"
+        aria-label="Toggle sidebar"
+      >
+        <i class="bi bi-list"></i>
+      </button>
+
+      <div class="navbar-nav flex-row">
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          (click)="layout.toggleTheme()"
+          [attr.aria-label]="layout.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'"
+          title="Toggle theme"
+        >
+          <i class="bi" [class.bi-moon-fill]="layout.theme() === 'light'" [class.bi-sun-fill]="layout.theme() === 'dark'"></i>
+        </button>
+
+        <div class="dropdown">
+          <button
+            class="btn btn-outline-secondary position-relative"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-label="Notifications"
+          >
+            <i class="bi bi-bell"></i>
+            @if (notifications.unreadCount() > 0) {
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ notifications.unreadCount() > 99 ? '99+' : notifications.unreadCount() }}
+              </span>
+            }
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
+            <li class="d-flex align-items-center justify-content-between">
+              <h6 class="dropdown-header mb-0">Notifications</h6>
+              @if (notifications.unreadCount() > 0) {
+                <button type="button" class="btn btn-link btn-sm text-decoration-none me-2" (click)="notifications.markAllRead()">
+                  Mark all read
+                </button>
+              }
+            </li>
+            @if (notifications.notifications().length === 0) {
+              <li><span class="dropdown-item-text text-secondary small">You're all caught up.</span></li>
+            } @else {
+              <li><hr class="dropdown-divider" /></li>
+              @for (notification of notifications.notifications(); track notification.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="dropdown-item notification-item"
+                    [class.is-unread]="!notification.read"
+                    (click)="onNotificationClick(notification)"
+                  >
+                    <span class="d-flex justify-content-between align-items-start gap-2">
+                      <span class="fw-semibold">{{ notification.title }}</span>
+                      @if (!notification.read) {
+                        <span class="unread-dot" aria-hidden="true"></span>
+                      }
+                    </span>
+                    <span class="d-block small text-secondary">{{ notification.body }}</span>
+                    <span class="d-block small text-secondary">{{ notification.createdAt | timeAgo }}</span>
+                  </button>
+                </li>
+              }
+            }
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i>
+            <span class="d-none d-md-inline">{{ auth.currentUser()?.fullName }}</span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><h6 class="dropdown-header text-truncate">{{ auth.currentUser()?.email }}</h6></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <button class="dropdown-item" type="button" (click)="onLogout()">
+                <i class="bi bi-box-arrow-right"></i>Logout
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

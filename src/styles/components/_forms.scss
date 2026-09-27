@@ -1,0 +1,205 @@
+.form-select {
+  padding-right: 1.875rem;
+  background-position: right 0.5rem center;
+}
+
+.form-select-sm {
+  padding-right: 1.625rem;
+  background-position: right 0.375rem center;
+}
+
+.form-select-lg {
+  padding-right: 2.25rem;
+  background-position: right 0.75rem center;
+}
+
+.form-container {
+  background: var(--bs-body-bg);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--bs-box-shadow);
+  padding: 2rem;
+
+  @include media-breakpoint-down(md) {
+    padding: 1.5rem;
+  }
+}
+
+.form-header {
+  margin-bottom: 2rem;
+  text-align: center;
+
+  .form-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--bs-heading-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-subtitle {
+    color: var(--bs-secondary);
+    font-size: 1rem;
+  }
+}
+
+.form-control,
+.form-select {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.feedback-message {
+  display: flex;
+  align-items: center;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+
+  .feedback-icon {
+    margin-right: 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  &.valid { color: var(--bs-success); }
+  &.invalid { color: var(--bs-danger); }
+}
+
+.input-group-icon {
+  .input-group-text {
+    background: transparent;
+    border-right: none;
+    color: var(--bs-secondary);
+  }
+
+  .form-control {
+    border-left: none;
+
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+    }
+  }
+
+  &:focus-within .input-group-text {
+    color: var(--bs-primary);
+    border-color: var(--bs-primary);
+  }
+}
+
+.form-check-card {
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.05);
+  }
+
+  .form-check-input:checked ~ & {
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.1);
+  }
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+
+  .strength-bar {
+    height: 4px;
+    background: var(--bs-light);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+
+    .strength-fill {
+      height: 100%;
+      transition: width 0.3s ease, background-color 0.3s ease;
+      width: 0%;
+
+      &.weak { background: var(--bs-danger); width: 25%; }
+      &.fair { background: var(--bs-warning); width: 50%; }
+      &.good { background: var(--bs-info); width: 75%; }
+      &.strong { background: var(--bs-success); width: 100%; }
+    }
+  }
+
+  .strength-text {
+    font-size: 0.8125rem;
+    color: var(--bs-secondary);
+  }
+}
+
+.file-upload-zone {
+  border: 2px dashed var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--bs-body-bg);
+
+  &:hover {
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.05);
+  }
+
+  &.dragover {
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    transform: scale(1.02);
+  }
+
+  .upload-icon {
+    font-size: 3rem;
+    color: var(--bs-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .upload-text { color: var(--bs-body-color); margin-bottom: 0.5rem; }
+  .upload-hint { color: var(--bs-secondary); font-size: 0.875rem; }
+  .file-input { display: none; }
+}
+
+.uploaded-files {
+  margin-top: 1rem;
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: var(--bs-light);
+    border-radius: var(--bs-border-radius);
+    margin-bottom: 0.5rem;
+    transition: background-color 0.2s ease;
+
+    [data-bs-theme="dark"] & { background: var(--bs-dark); }
+
+    .file-info { display: flex; align-items: center; }
+    .file-icon { margin-right: 0.75rem; color: var(--bs-primary); }
+    .file-name { font-weight: 500; margin-bottom: 0.125rem; }
+    .file-size { font-size: 0.8125rem; color: var(--bs-secondary); }
+
+    .file-actions { display: flex; align-items: center; }
+
+    .btn-remove {
+      padding: 0.25rem;
+      border: none;
+      background: none;
+      color: var(--bs-danger);
+
+      &:hover {
+        color: var(--bs-danger);
+        background: rgba(var(--bs-danger-rgb), 0.1);
+      }
+    }
+  }
+}
+
+@include media-breakpoint-down(md) {
+  .form-container {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    border-radius: 0;
+  }
+}

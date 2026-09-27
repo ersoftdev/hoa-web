@@ -1,0 +1,40 @@
+@if (actions().length) {
+  <div class="dropdown">
+    <button
+      #trigger
+      type="button"
+      class="btn btn-sm btn-outline-secondary dropdown-toggle"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+      aria-label="Actions"
+    >
+      <i class="bi bi-three-dots"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      @for (action of actions(); track action.label) {
+        <li>
+          @if (action.routerLink) {
+            <a [routerLink]="action.routerLink" [queryParams]="action.queryParams" class="dropdown-item d-flex align-items-center gap-2">
+              <i class="bi" [class]="'bi-' + action.icon + ' ' + (action.colorClass ?? '')"></i>
+              {{ action.label }}
+            </a>
+          } @else {
+            <button
+              type="button"
+              class="dropdown-item d-flex align-items-center gap-2"
+              [disabled]="action.pending"
+              (click)="action.onClick?.()"
+            >
+              @if (action.pending) {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              } @else {
+                <i class="bi" [class]="'bi-' + action.icon + ' ' + (action.colorClass ?? '')"></i>
+              }
+              {{ action.label }}
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  </div>
+}

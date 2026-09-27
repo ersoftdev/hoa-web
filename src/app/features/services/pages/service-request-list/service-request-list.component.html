@@ -1,0 +1,129 @@
+<app-page-header [title]="pageTitle">
+  @if (mode === 'my') {
+    <a routerLink="/app/services/request/new" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i>
+      New Service Request
+    </a>
+  }
+</app-page-header>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <ul class="nav nav-pills flex-wrap gap-1 mb-0">
+    @for (tab of statusTabs; track tab) {
+      <li class="nav-item">
+        <button type="button" class="nav-link" [class.active]="statusFilter() === tab" (click)="onStatusTabSelect(tab)">
+          {{ tab }}
+        </button>
+      </li>
+    }
+  </ul>
+  <div class="form-check form-switch mb-0">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      role="switch"
+      id="groupByService"
+      [checked]="groupByService()"
+      (change)="onToggleGroupByService()"
+    />
+    <label class="form-check-label" for="groupByService">Group by Service</label>
+  </div>
+</div>
+
+@if (actionError()) {
+  <div class="alert alert-danger" role="alert">{{ actionError() }}</div>
+}
+
+<div class="card">
+  <div class="card-body p-0">
+    @switch (state()) {
+      @case ('loading') {
+        <app-loading-state message="Loading requests…" />
+      }
+      @case ('error') {
+        <app-error-state title="Unable to load requests" [description]="errorMessage() ?? ''" (retry)="load()" />
+      }
+      @case ('success') {
+        @let data = result()!;
+        @if (data.items.length) {
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  @if (mode === 'queue') {
+                    <th>Homeowner</th>
+                  }
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Requested</th>
+                  <th class="table-cell-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (groupByService()) {
+                  @for (group of groupedSections(); track group.serviceName) {
+                    <tr class="table-group-header">
+                      <td [attr.colspan]="mode === 'queue' ? 5 : 4" class="fw-semibold bg-body-secondary">
+                        {{ group.serviceName }} <span class="text-muted fw-normal">({{ group.items.length }})</span>
+                      </td>
+                    </tr>
+                    @for (request of group.items; track request.id) {
+                      <tr>
+                        @if (mode === 'queue') {
+                          <td>{{ request.homeownerName }}</td>
+                        }
+                        <td>{{ request.serviceName }}</td>
+                        <td><app-status-badge [status]="displayStatus(request)" [appTooltip]="statusTooltip(request.status)" /></td>
+                        <td>{{ request.requestedAt | date: 'MM/dd/yyyy' }}</td>
+                        <td class="table-cell-actions">
+                          <app-row-actions [actions]="actionsFor(request)" />
+                        </td>
+                      </tr>
+                    }
+                  }
+                } @else {
+                  @for (request of data.items; track request.id) {
+                    <tr>
+                      @if (mode === 'queue') {
+                        <td>{{ request.homeownerName }}</td>
+                      }
+                      <td>{{ request.serviceName }}</td>
+                      <td><app-status-badge [status]="displayStatus(request)" [appTooltip]="statusTooltip(request.status)" /></td>
+                      <td>{{ request.requestedAt | date: 'MM/dd/yyyy' }}</td>
+                      <td class="table-cell-actions">
+                        <app-row-actions [actions]="actionsFor(request)" />
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            @if (groupByService()) {
+              <small class="text-muted">
+                {{ data.items.length }} request{{ data.items.length === 1 ? '' : 's' }} across {{ groupedSections().length }} service{{
+                  groupedSections().length === 1 ? '' : 's'
+                }}
+                @if (data.total > data.items.length) {
+                  — showing the first {{ data.items.length }} of {{ data.total }}; narrow by status to see the rest.
+                }
+              </small>
+            } @else {
+              <small class="text-muted">{{ data.total }} request{{ data.total === 1 ? '' : 's' }}</small>
+              <app-pagination [page]="page()" [pageSize]="pageSize" [total]="data.total" (pageChange)="onPageChange($event)" />
+            }
+          </div>
+        } @else {
+          <div class="p-4">
+            <app-empty-state
+              icon="inbox"
+              title="No requests found"
+              [description]="mode === 'my' ? 'Requests you submit will show up here.' : 'Try a different status filter.'"
+            />
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

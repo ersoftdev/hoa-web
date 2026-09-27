@@ -1,0 +1,100 @@
+<div class="auth-shell">
+  <div class="card auth-card">
+    <div class="card-body">
+      <div class="auth-brand">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="var(--bs-primary)" />
+          <path d="M16 7l9 7.2V25h-5.5v-6.5h-7V25H7v-10.8L16 7z" fill="white" />
+        </svg>
+        <span>HO Portal</span>
+      </div>
+
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-subtitle">Sign in to manage your HOA account</p>
+
+      @if (serverError()) {
+        <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            class="form-control"
+            formControlName="email"
+            [class.is-invalid]="form.controls.email.invalid && form.controls.email.touched"
+            autocomplete="username"
+          />
+          @if (form.controls.email.invalid && form.controls.email.touched) {
+            <div class="invalid-feedback">
+              @if (form.controls.email.hasError('required')) {
+                Email is required.
+              } @else {
+                Enter a valid email address.
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="form-label mb-0" for="password">Password</label>
+            <a routerLink="/forgot-password" class="small">Forgot password?</a>
+          </div>
+          <div class="input-group has-validation">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              class="form-control"
+              formControlName="password"
+              [class.is-invalid]="form.controls.password.invalid && form.controls.password.touched"
+              autocomplete="current-password"
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+            >
+              <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+            </button>
+            @if (form.controls.password.invalid && form.controls.password.touched) {
+              <div class="invalid-feedback">Password is required.</div>
+            }
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          }
+          Sign in
+        </button>
+      </form>
+
+      <p class="auth-footer mb-1">New homeowner? <a routerLink="/register">Create an account</a></p>
+      <p class="auth-footer mt-0 mb-0">Trouble signing in? Contact your HOA administrator.</p>
+
+      @if (showDevTools) {
+        <hr class="my-4" />
+        <div class="text-center">
+          <p class="text-muted small mb-2">
+            <i class="bi bi-tools"></i>
+            Dev only — identity-api has no login endpoint yet, this skips it
+          </p>
+          <div class="d-flex gap-2 justify-content-center flex-wrap">
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onDevSignIn('Homeowner')">
+              Demo: Homeowner
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onDevSignIn('BoardMember')">
+              Demo: Board Member
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onDevSignIn('Admin')">Demo: Admin</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,95 @@
+<div class="modal fade" tabindex="-1" aria-hidden="true" aria-labelledby="booking-picker-title" #modalRef>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      @if (isOpen()) {
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="booking-picker-title">
+            Choose a date and time
+            @if (service(); as svc) {
+              — {{ svc.name }}
+            }
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="onCancel()"></button>
+        </div>
+        <div class="modal-body">
+          @if (loadError()) {
+            <div class="alert alert-danger py-2 small" role="alert">{{ loadError() }}</div>
+          }
+
+          <app-hoa-calendar
+            mode="picker"
+            [selectable]="true"
+            [bookings]="busySlots()"
+            (monthChanged)="onMonthChanged($event)"
+            (rangeSelected)="onRangeSelected($event)"
+          />
+
+          @if (selectedRange(); as range) {
+            <p class="small text-muted mt-2 mb-3">
+              Selected:
+              <strong>{{ range.start | date: 'MM/dd/yyyy' }}</strong>
+              @if (range.end !== range.start) {
+                – <strong>{{ range.end | date: 'MM/dd/yyyy' }}</strong>
+              }
+            </p>
+
+            @if (!effectiveSchedule().is24Hours) {
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="bookingPickerStartTime">Start time</label>
+                  <select
+                    id="bookingPickerStartTime"
+                    class="form-select"
+                    [ngModel]="startTime()"
+                    (ngModelChange)="onStartTimeSelected($event)"
+                  >
+                    <option value="" disabled>Select a time…</option>
+                    @for (option of startTimeOptions(); track option.value) {
+                      <option [value]="option.value" [disabled]="option.disabled">{{ option.label }}{{ optionSuffix(option) }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="bookingPickerEndTime">End time</label>
+                  <select
+                    id="bookingPickerEndTime"
+                    class="form-select"
+                    [ngModel]="endTime()"
+                    (ngModelChange)="endTime.set($event)"
+                    [disabled]="!startTime()"
+                  >
+                    <option value="" disabled>Select a time…</option>
+                    @for (option of endTimeOptions(); track option.value) {
+                      <option [value]="option.value" [disabled]="option.disabled">{{ option.label }}{{ optionSuffix(option) }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              @if (service()) {
+                <p class="text-muted small mt-2 mb-0">
+                  This service is open {{ startTimeOptions()[0]?.label }} – {{ startTimeOptions()[startTimeOptions().length - 1]?.label }}.
+                </p>
+              }
+              @if (bookedTimeRanges().length) {
+                <p class="text-muted small mt-1 mb-0">
+                  Already booked on the selected date(s):
+                  @for (r of bookedTimeRanges(); track r.start + r.end; let last = $last) {
+                    {{ r.start | hhmmTime }} – {{ r.end | hhmmTime }}{{ last ? '' : ', ' }}
+                  }
+                </p>
+              }
+            }
+          } @else {
+            <p class="small text-muted mt-2 mb-3">
+              Click a day to start, then another to finish the range (or the same day twice). Time options appear once your dates are selected.
+            </p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="onCancel()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="!canConfirm()" (click)="onConfirm()">Confirm</button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

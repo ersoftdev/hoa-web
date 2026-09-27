@@ -1,0 +1,199 @@
+@switch (state()) {
+  @case ('loading') {
+    <app-loading-state message="Loading…" />
+  }
+  @case ('error') {
+    <app-error-state title="Unable to load" [description]="errorMessage() ?? ''" />
+  }
+  @case ('success') {
+    <app-page-header [title]="selectedService() ? 'Request ' + selectedService()!.name : 'New Service Request'" />
+
+    @if (isOpenPicker && availableServices().length === 0) {
+      <app-empty-state icon="tools" title="No services available" description="There are no active services to request right now.">
+        <a routerLink="/app/services/my-requests" class="btn btn-primary btn-sm">Back to My Requests</a>
+      </app-empty-state>
+    } @else {
+      <div class="row g-3 g-lg-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-body">
+              @if (serverError()) {
+                <div class="alert alert-danger" role="alert">{{ serverError() }}</div>
+              }
+
+              <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                @if (isOpenPicker) {
+                  <div class="mb-3">
+                    <label class="form-label" for="serviceId">Service</label>
+                    <select id="serviceId" class="form-select" formControlName="serviceId" (change)="onServiceSelect($event)">
+                      <option value="">Select a service…</option>
+                      @for (service of availableServices(); track service.id) {
+                        <option [value]="service.id">{{ service.name }}</option>
+                      }
+                    </select>
+                  </div>
+                }
+
+                @if (selectedService()) {
+                <div class="mb-3">
+                  <label class="form-label" for="notes">Notes (optional)</label>
+                  <textarea
+                    id="notes"
+                    class="form-control"
+                    rows="3"
+                    formControlName="notes"
+                    placeholder="Anything the board should know about this request"
+                  ></textarea>
+                </div>
+
+                @if (isBooking()) {
+                  <div class="mb-3">
+                    <label class="form-label d-block">Booking date &amp; time</label>
+                    @if (form.controls.bookingStartDate.value) {
+                      <p class="mb-2">
+                        <strong>{{ form.controls.bookingStartDate.value | date: 'MM/dd/yyyy' }}</strong>
+                        @if (form.controls.bookingEndDate.value !== form.controls.bookingStartDate.value) {
+                          – <strong>{{ form.controls.bookingEndDate.value | date: 'MM/dd/yyyy' }}</strong>
+                        }
+                        @if (form.controls.bookingStartTime.value) {
+                          , {{ form.controls.bookingStartTime.value }}–{{ form.controls.bookingEndTime.value }}
+                        }
+                      </p>
+                    } @else {
+                      <p class="text-muted small mb-2">No date selected yet.</p>
+                    }
+                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="bookingPickerModal.open(selectedService()!)">
+                      <i class="bi bi-calendar3"></i>
+                      Open Calendar
+                    </button>
+                    @if ((form.controls.bookingStartDate.invalid && form.controls.bookingStartDate.touched) || (form.controls.bookingStartTime.invalid && form.controls.bookingStartTime.touched)) {
+                      <div class="text-danger small mt-1">Pick a date and time from the calendar before submitting.</div>
+                    }
+                  </div>
+
+                  @if (bookingDays(); as days) {
+                    <div class="alert alert-info py-2 small mb-3" role="status">
+                      <i class="bi bi-info-circle"></i>
+                      {{ days }} day{{ days === 1 ? '' : 's' }} booked — {{ ratesSubtotal() | hoaCurrency }}/day × {{ days }}
+                      @if (selectedService()!.serviceCharge) {
+                        + {{ selectedService()!.serviceCharge | hoaCurrency }} service charge
+                      }
+                      = {{ totalFee() | hoaCurrency }}
+                    </div>
+                  }
+                }
+
+                @if (selectedService()!.requirements.length) {
+                  <div class="form-check mb-4">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="acknowledgeRequirements"
+                      formControlName="acknowledgeRequirements"
+                      [class.is-invalid]="form.controls.acknowledgeRequirements.invalid && form.controls.acknowledgeRequirements.touched"
+                    />
+                    <label class="form-check-label" for="acknowledgeRequirements">I meet the requirements listed for this service.</label>
+                    @if (form.controls.acknowledgeRequirements.invalid && form.controls.acknowledgeRequirements.touched) {
+                      <div class="invalid-feedback d-block">Confirm you meet the requirements before submitting.</div>
+                    }
+                  </div>
+                }
+              }
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" [disabled]="submitting() || !selectedService()">
+                  @if (submitting()) {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  }
+                  Submit Request
+                </button>
+                <a routerLink="/app/services" class="btn btn-outline-secondary">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        @if (selectedService(); as data) {
+          <div class="card mb-3">
+            <div class="card-header">
+              <h2 class="h6 mb-0">Service Details</h2>
+            </div>
+            <div class="card-body">
+              <p class="text-muted small">{{ data.description }}</p>
+              @if (data.schedule.isBookingService) {
+                <span class="badge text-bg-info mb-2">Booking Service — billed per day</span>
+              }
+              <dl class="row mb-0 small">
+                <dt class="col-5 text-muted">Schedule Availability</dt>
+                <dd class="col-7">
+                  @if (data.schedule.isRecurring) {
+                    Recurs {{ data.schedule.recurrenceFrequency | titlecase }}
+                  } @else {
+                    {{ data.schedule.fromDate | date: 'MM/dd/yyyy' }} – {{ data.schedule.endDate | date: 'MM/dd/yyyy' }}
+                    @if (data.schedule.is24Hours) {
+                      <br />
+                      24 hours
+                    } @else {
+                      <br />
+                      Time: {{ '1970-01-01T' + data.schedule.startTime | date: 'shortTime' }} –
+                      {{ '1970-01-01T' + data.schedule.endTime | date: 'shortTime' }}
+                    }
+                  }
+                </dd>
+
+                @if (data.serviceCharge) {
+                  <dt class="col-5 text-muted">Service charge</dt>
+                  <dd class="col-7">{{ data.serviceCharge | hoaCurrency }}</dd>
+                }
+
+                <dt class="col-5 text-muted mb-0">{{ isBooking() ? 'Total (so far)' : 'Service fee' }}</dt>
+                <dd class="col-7 mb-0">{{ totalFee() | hoaCurrency }}</dd>
+              </dl>
+            </div>
+          </div>
+
+          @if (data.requirements.length) {
+            <div class="card mb-3">
+              <div class="card-header">
+                <h2 class="h6 mb-0">Requirements</h2>
+              </div>
+              <div class="card-body">
+                <ul class="mb-0 ps-3">
+                  @for (requirement of data.requirements; track requirement) {
+                    <li>{{ requirement }}</li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+
+          @if (data.payment.paymentRequired) {
+            <div class="card">
+              <div class="card-header">
+                <h2 class="h6 mb-0">Payment</h2>
+              </div>
+              <div class="card-body">
+                @if (data.payment.downpaymentRequired) {
+                  <p class="mb-1 small">
+                    Downpayment required: <strong>{{ downPaymentAmount() | hoaCurrency }}</strong>
+                    ({{ data.payment.downPaymentPercent }}%)
+                  </p>
+                  <p class="mb-0 small text-muted">You'll be asked to pay this once your request is submitted.</p>
+                } @else {
+                  <p class="mb-0 small text-muted">Full payment of {{ totalFee() | hoaCurrency }} required once your request is submitted.</p>
+                }
+              </div>
+            </div>
+          }
+        } @else {
+          <app-empty-state icon="tools" title="Select a service" description="Choose a service to see its schedule, fee, and requirements." />
+        }
+      </div>
+      </div>
+    }
+  }
+}
+
+<app-booking-picker-modal #bookingPickerModal (confirmed)="onBookingConfirmed($event)" />
